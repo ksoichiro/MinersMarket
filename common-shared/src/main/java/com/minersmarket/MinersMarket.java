@@ -2,6 +2,7 @@ package com.minersmarket;
 
 import com.minersmarket.entity.MerchantEntityRenderer;
 import com.minersmarket.event.GameTickHandler;
+import com.minersmarket.event.PlayerSpawnHandler;
 import com.minersmarket.hud.GameHudOverlay;
 import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.registry.ModBlocks;
@@ -11,6 +12,7 @@ import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.GameStateManager;
 import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ public class MinersMarket {
         });
         LifecycleEvent.SERVER_STOPPING.register(server -> GameStateManager.clear());
         TickEvent.SERVER_PRE.register(GameTickHandler::onServerTick);
+        PlayerEvent.PLAYER_RESPAWN.register(PlayerSpawnHandler::onPlayerRespawn);
+        PlayerEvent.PLAYER_JOIN.register(PlayerSpawnHandler::onPlayerJoin);
 
         LOGGER.info("Miner's Market initialized");
     }
