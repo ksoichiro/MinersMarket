@@ -1,0 +1,114 @@
+plugins {
+    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'com.gradleup.shadow' version '8.3.6' apply false
+}
+
+// Multi-version support: Load version-specific properties
+ext.loadVersionProperties = { String version ->
+    def propsFile = file("props/${version}.properties")
+    if (!propsFile.exists()) {
+        throw new GradleException("Version properties not found: ${propsFile.absolutePath}")
+    }
+
+    logger.lifecycle("Loading version properties: ${propsFile.name}")
+    def props = new Properties()
+    propsFile.withInputStream { props.load(it) }
+
+    // Override gradle.properties with version-specific values
+    props.each { key, value ->
+        project.ext.set(key.toString(), value.toString())
+    }
+
+    logger.lifecycle("Target Minecraft version: ${project.ext.minecraft_version}")
+}
+
+// Determine target version (defined in gradle.properties, overridable via -P)
+def targetVersion = project.findProperty('target_mc_version')
+if (targetVersion == null) {
+    throw new GradleException("'target_mc_version' property is not defined. Check gradle.properties or pass -Ptarget_mc_version=<version>")
+}
+loadVersionProperties(targetVersion)
+
+architectury {
+    minecraft = project.ext.minecraft_version
+}
+
+allprojects {
+    group = rootProject.maven_group
+    version = rootProject.mod_version
+}
+
+subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
+
+    // Propagate version-specific properties to subprojects
+    ext.minecraft_version = rootProject.ext.minecraft_version
+    ext.pack_format = rootProject.ext.pack_format
+    ext.architectury_api_version = rootProject.ext.architectury_api_version
+    ext.fabric_loader_version = rootProject.ext.fabric_loader_version
+    ext.fabric_api_version = rootProject.ext.fabric_api_version
+    ext.enabled_platforms = rootProject.ext.enabled_platforms
+    ext.java_version = rootProject.ext.java_version
+
+    // Conditionally propagate platform-specific versions
+    if (rootProject.ext.has('neoforge_version')) {
+        ext.neoforge_version = rootProject.ext.neoforge_version
+    }
+    if (rootProject.ext.has('forge_version')) {
+        ext.forge_version = rootProject.ext.forge_version
+    }
+
+    repositories {
+        maven { url 'https://maven.architectury.dev/' }
+        maven { url 'https://maven.neoforged.net/releases/' }
+        maven { url 'https://maven.minecraftforge.net/' }
+        maven { url 'https://maven.fabricmc.net/' }
+        mavenCentral()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:$rootProject.ext.minecraft_version"
+        mappings loom.officialMojangMappings()
+    }
+
+    java {
+        withSourcesJar()
+        def javaVer = JavaVersion.toVersion(project.ext.java_version)
+        sourceCompatibility = javaVer
+        targetCompatibility = javaVer
+
+        // Use toolchain to automatically download and use the correct JDK
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(project.ext.java_version)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.encoding = 'UTF-8'
+        def javaVersionInt = project.ext.java_version as Integer
+        if (javaVersionInt >= 9) {
+            it.options.release = javaVersionInt
+        }
+    }
+
+    tasks.withType(JavaExec).configureEach {
+        javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    }
+
+    // Common resource processing for platform modules (fabric, neoforge, forge)
+    if (project.name in ['fabric', 'neoforge', 'forge']) {
+        tasks.withType(ProcessResources).configureEach {
+            inputs.property 'pack_format', project.ext.pack_format
+
+            filesMatching('pack.mcmeta') {
+                expand 'pack_format': project.ext.pack_format
+            }
+        }
+    }
+}
+
+// Multi-version build tasks (cleanAll, buildAll, etc.)
+apply from: 'gradle/multi-version-tasks.gradle'

@@ -1,0 +1,193 @@
+// Multi-version build tasks
+// Defines custom Gradle tasks for building the mod across multiple Minecraft versions.
+
+def supportedVersions = ['1.21.1']
+def taskGroup = 'miners market build'
+
+// ============================================================
+// Clean Tasks
+// ============================================================
+
+supportedVersions.each { version ->
+    def versionSuffix = version.replace('.', '_')
+
+    tasks.register("clean${versionSuffix}") {
+        group = taskGroup
+        description = "Clean build outputs for Minecraft ${version}"
+
+        doLast {
+            project.exec {
+                commandLine './gradlew', 'clean', "-Ptarget_mc_version=${version}"
+            }
+        }
+    }
+}
+
+tasks.register('cleanAll') {
+    group = taskGroup
+    description = "Clean build outputs for all supported Minecraft versions (${supportedVersions.join(', ')})"
+
+    doLast {
+        supportedVersions.each { version ->
+            logger.lifecycle(">>> Cleaning for Minecraft ${version}...")
+
+            project.exec {
+                commandLine './gradlew', 'clean', "-Ptarget_mc_version=${version}"
+            }
+        }
+
+        logger.lifecycle('')
+        logger.lifecycle('All versions cleaned successfully.')
+    }
+}
+
+// ============================================================
+// Build Tasks
+// ============================================================
+
+supportedVersions.each { version ->
+    def versionSuffix = version.replace('.', '_')
+
+    tasks.register("build${versionSuffix}") {
+        group = taskGroup
+        description = "Build mod for Minecraft ${version}"
+
+        doFirst {
+            logger.lifecycle('')
+            logger.lifecycle('====================================')
+            logger.lifecycle("Building for Minecraft ${version}...")
+            logger.lifecycle('====================================')
+            logger.lifecycle('')
+        }
+
+        doLast {
+            project.exec {
+                commandLine './gradlew', 'clean', 'build', "-Ptarget_mc_version=${version}", '-x', 'test'
+            }
+        }
+    }
+}
+
+tasks.register('buildAll') {
+    group = taskGroup
+    description = "Build mod for all supported Minecraft versions (${supportedVersions.join(', ')})"
+
+    doFirst {
+        logger.lifecycle('')
+        logger.lifecycle('====================================================')
+        logger.lifecycle('Building for ALL supported Minecraft versions...')
+        logger.lifecycle("Versions: ${supportedVersions.join(', ')}")
+        logger.lifecycle('====================================================')
+        logger.lifecycle('')
+    }
+
+    doLast {
+        def failed = []
+
+        supportedVersions.each { version ->
+            logger.lifecycle('')
+            logger.lifecycle(">>> Building for Minecraft ${version}...")
+            logger.lifecycle('')
+
+            try {
+                project.exec {
+                    commandLine './gradlew', 'clean', 'build', "-Ptarget_mc_version=${version}", '-x', 'test'
+                    errorOutput = System.err
+                }
+                logger.lifecycle("SUCCESS: Minecraft ${version}")
+            } catch (Exception e) {
+                logger.error("FAILED: Minecraft ${version}")
+                failed.add(version)
+            }
+        }
+
+        logger.lifecycle('')
+        logger.lifecycle('====================================================')
+        logger.lifecycle('Build Summary:')
+        logger.lifecycle('====================================================')
+
+        if (failed.isEmpty()) {
+            logger.lifecycle('All versions built successfully!')
+            supportedVersions.each { version ->
+                logger.lifecycle("   - Minecraft ${version}")
+            }
+        } else {
+            logger.lifecycle("${failed.size()} version(s) failed:")
+            failed.each { version ->
+                logger.lifecycle("   - Minecraft ${version}")
+            }
+            throw new GradleException("Build failed for: ${failed.join(', ')}")
+        }
+
+        logger.lifecycle('====================================================')
+        logger.lifecycle('')
+    }
+}
+
+// ============================================================
+// Collect Release JARs
+// ============================================================
+
+tasks.register('release') {
+    group = taskGroup
+    description = "Clean, build all versions, and collect release JARs"
+
+    doLast {
+        ['cleanAll', 'buildAll', 'collectJars'].each { taskName ->
+            project.exec {
+                commandLine './gradlew', taskName
+            }
+        }
+    }
+}
+
+tasks.register('collectJars') {
+    group = taskGroup
+    description = "Collect release JARs from all versions into build/release/"
+
+    doLast {
+        def releaseDir = file("${rootDir}/build/release")
+        if (releaseDir.exists()) {
+            releaseDir.deleteDir()
+        }
+        releaseDir.mkdirs()
+
+        def collected = []
+
+        supportedVersions.each { version ->
+            def propsFile = file("${rootDir}/props/${version}.properties")
+            def props = new Properties()
+            propsFile.withInputStream { props.load(it) }
+
+            def platforms = props.getProperty('enabled_platforms', '').split(',').collect { it.trim() }
+
+            platforms.each { platform ->
+                def libsDir = file("${rootDir}/${platform}-${version}/build/libs")
+                if (!libsDir.exists()) {
+                    logger.warn("SKIP: ${libsDir} does not exist (not built yet?)")
+                    return
+                }
+
+                def archivesName = project.property('archives_name')
+                def modVersion = project.property('mod_version')
+                def jarName = "${archivesName}-${modVersion}+${version}-${platform}.jar"
+                def jarFile = new File(libsDir, jarName)
+
+                if (jarFile.exists()) {
+                    ant.copy(file: jarFile, todir: releaseDir)
+                    collected.add(jarName)
+                    logger.lifecycle("Collected: ${jarName}")
+                } else {
+                    logger.warn("NOT FOUND: ${jarFile}")
+                }
+            }
+        }
+
+        logger.lifecycle('')
+        if (collected.isEmpty()) {
+            logger.warn('No release JARs found. Run buildAll first.')
+        } else {
+            logger.lifecycle("${collected.size()} JAR(s) collected into build/release/")
+        }
+    }
+}

@@ -1,0 +1,42 @@
+pluginManagement {
+    repositories {
+        maven { url 'https://maven.fabricmc.net/' }
+        maven { url 'https://maven.architectury.dev/' }
+        maven { url 'https://maven.neoforged.net/releases/' }
+        maven { url 'https://maven.minecraftforge.net/' }
+        gradlePluginPortal()
+    }
+}
+
+// Enable automatic download of Java toolchains
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
+rootProject.name = 'minersmarket'
+
+// Include version-specific common module based on target Minecraft version
+if (!settings.hasProperty('target_mc_version')) {
+    throw new GradleException("'target_mc_version' property is not defined. Check gradle.properties or pass -Ptarget_mc_version=<version>")
+}
+def targetMcVersion = settings.target_mc_version
+
+include "common-${targetMcVersion}"
+logger.lifecycle("Common module: common-${targetMcVersion}")
+
+// Load enabled_platforms from props file
+def propsFile = file("props/${targetMcVersion}.properties")
+if (!propsFile.exists()) {
+    throw new GradleException("Version properties not found: ${propsFile.absolutePath}")
+}
+def props = new Properties()
+propsFile.withInputStream { props.load(it) }
+def enabledPlatforms = props.getProperty('enabled_platforms', '').split(',')
+
+// Platform-specific projects
+enabledPlatforms.each { platform ->
+    platform = platform.trim()
+    include platform
+    project(":${platform}").projectDir = file("${platform}-${targetMcVersion}")
+    logger.lifecycle("${platform.capitalize()} module: ${platform}-${targetMcVersion}")
+}
