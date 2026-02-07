@@ -7,5 +7,9 @@
   "message.minersmarket.cannot_start": "現在ゲームを開始できません。",
   "message.minersmarket.game_reset": "ゲームがリセットされました。",
   "message.minersmarket.cannot_reset": "現在ゲームをリセットできません。",
-  "entity.minersmarket.merchant": "商人"
+  "entity.minersmarket.merchant": "商人",
+  "message.minersmarket.cannot_sell": "現在売却できません。",
+  "message.minersmarket.not_sellable": "このアイテムは売却できません。",
+  "message.minersmarket.sold": "+%s ゴールド",
+  "message.minersmarket.winner": "%s が目標達成！ゲーム終了！"
 }
