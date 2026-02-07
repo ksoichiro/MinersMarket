@@ -1,5 +1,6 @@
 package com.minersmarket;
 
+import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.registry.ModBlocks;
 import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
@@ -17,5 +18,9 @@ public class MinersMarket {
         ModEntityTypes.register();
         ModCreativeTab.register();
         LOGGER.info("Miner's Market initialized");
+    }
+
+    public static void initClient() {
+        GameStateSyncPacket.registerClientReceiver();
     }
 }
