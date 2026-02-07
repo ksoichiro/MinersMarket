@@ -10,11 +10,14 @@ import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.GameStateManager;
+import com.minersmarket.structure.MarketGenerator;
 import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +34,7 @@ public class MinersMarket {
         LifecycleEvent.SERVER_LEVEL_LOAD.register(level -> {
             if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
                 GameStateManager.init(level);
+                generateMarketIfNeeded(level);
             }
         });
         LifecycleEvent.SERVER_STOPPING.register(server -> GameStateManager.clear());
@@ -39,6 +43,22 @@ public class MinersMarket {
         PlayerEvent.PLAYER_JOIN.register(PlayerSpawnHandler::onPlayerJoin);
 
         LOGGER.info("Miner's Market initialized");
+    }
+
+    private static void generateMarketIfNeeded(ServerLevel level) {
+        GameStateManager manager = GameStateManager.getInstance();
+        if (manager == null || manager.isMarketGenerated()) return;
+
+        BlockPos spawnPos = level.getSharedSpawnPos();
+        // Place market slightly in front of spawn
+        BlockPos marketOrigin = spawnPos.offset(-4, 0, 2);
+        // Find solid ground
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, marketOrigin.getX(), marketOrigin.getZ());
+        marketOrigin = new BlockPos(marketOrigin.getX(), y, marketOrigin.getZ());
+
+        MarketGenerator.generate(level, marketOrigin);
+        manager.setMarketGenerated();
+        LOGGER.info("Market generated at {}", marketOrigin);
     }
 
     public static void initClient() {

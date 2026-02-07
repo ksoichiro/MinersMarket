@@ -12,6 +12,7 @@ public class GameStateSavedData extends SavedData {
     GameState state = GameState.NOT_STARTED;
     final Map<UUID, Long> salesAmounts = new HashMap<>();
     int playTime = 0;
+    boolean marketGenerated = false;
 
     public GameStateSavedData() {
     }
@@ -20,6 +21,7 @@ public class GameStateSavedData extends SavedData {
         GameStateSavedData data = new GameStateSavedData();
         data.state = GameState.values()[tag.getInt("state")];
         data.playTime = tag.getInt("playTime");
+        data.marketGenerated = tag.getBoolean("marketGenerated");
         CompoundTag salesTag = tag.getCompound("salesAmounts");
         for (String key : salesTag.getAllKeys()) {
             data.salesAmounts.put(UUID.fromString(key), salesTag.getLong(key));
@@ -31,6 +33,7 @@ public class GameStateSavedData extends SavedData {
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         tag.putInt("state", state.ordinal());
         tag.putInt("playTime", playTime);
+        tag.putBoolean("marketGenerated", marketGenerated);
         CompoundTag salesTag = new CompoundTag();
         salesAmounts.forEach((uuid, amount) -> salesTag.putLong(uuid.toString(), amount));
         tag.put("salesAmounts", salesTag);

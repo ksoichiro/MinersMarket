@@ -165,4 +165,19 @@ public class GameStateManager {
     public boolean hasReachedTarget(UUID playerId) {
         return getSalesAmount(playerId) >= TARGET_SALES;
     }
+
+    // Market generation
+
+    public boolean isMarketGenerated() {
+        return savedData.marketGenerated;
+    }
+
+    public void setMarketGenerated() {
+        savedData.marketGenerated = true;
+        savedData.setDirty();
+    }
+
+    public ServerLevel getServerLevel() {
+        return serverLevel;
+    }
 }
