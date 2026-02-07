@@ -1,4 +1,10 @@
 {
   "itemGroup.minersmarket": "マイナーズマーケット",
-  "item.minersmarket.minerspickaxe": "採掘者のツルハシ"
+  "item.minersmarket.minerspickaxe": "採掘者のツルハシ",
+  "block.minersmarket.game_start_block": "ゲーム開始ブロック",
+  "block.minersmarket.game_reset_block": "ゲームリセットブロック",
+  "message.minersmarket.game_started": "ゲームが開始されました！",
+  "message.minersmarket.cannot_start": "現在ゲームを開始できません。",
+  "message.minersmarket.game_reset": "ゲームがリセットされました。",
+  "message.minersmarket.cannot_reset": "現在ゲームをリセットできません。"
 }
