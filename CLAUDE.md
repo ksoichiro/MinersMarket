@@ -71,8 +71,16 @@ Gradle project names differ from directory names. `settings.gradle` dynamically 
 - NeoForge 21.1.209
 - Mojang official mappings
 
+### Platform-Specific gradle.properties
+
+Each version-specific platform module requires a `gradle.properties` with `loom.platform`:
+- `fabric-1.21.1/gradle.properties` → `loom.platform=fabric`
+- `neoforge-1.21.1/gradle.properties` → `loom.platform=neoforge`
+
+Without this, Architectury Loom does not create platform-specific dependency configurations (e.g., `neoForge`).
+
 ## Implementation Plan
 
-Detailed plan in `docs/plan.md` with 11 phases. MVP = Phases 1-10. Current status: infrastructure scaffolding complete, no Java source yet.
+Detailed plan in `docs/plan.md` with 11 phases. MVP = Phases 1-10. Current status: Phase 1 complete.
 
 Package structure: `com.minersmarket.{registry,state,entity,block,item,trade,hud,network,event,structure}`
