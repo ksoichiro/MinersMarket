@@ -8,7 +8,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 public class ModCreativeTab {
     public static final DeferredRegister<CreativeModeTab> TABS =
@@ -18,7 +17,7 @@ public class ModCreativeTab {
             "minersmarket_tab",
             () -> CreativeTabRegistry.create(
                     Component.translatable("itemGroup.minersmarket"),
-                    () -> new ItemStack(Items.DIAMOND_PICKAXE)
+                    () -> new ItemStack(ModItems.MINERS_PICKAXE.get())
             )
     );
 
