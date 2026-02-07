@@ -11,5 +11,7 @@
   "message.minersmarket.cannot_sell": "現在売却できません。",
   "message.minersmarket.not_sellable": "このアイテムは売却できません。",
   "message.minersmarket.sold": "+%s ゴールド",
-  "message.minersmarket.winner": "%s が目標達成！ゲーム終了！"
+  "message.minersmarket.winner": "%s が目標達成！ゲーム終了！",
+  "message.minersmarket.winner_title": "ゲーム終了！",
+  "message.minersmarket.winner_subtitle": "%s の勝利！"
 }

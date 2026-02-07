@@ -1,8 +1,10 @@
 package com.minersmarket.block;
 
+import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.state.GameStateManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -27,7 +29,11 @@ public class GameResetBlock extends Block {
         }
         if (manager.canReset()) {
             manager.reset();
-            player.sendSystemMessage(Component.translatable("message.minersmarket.game_reset"));
+            // Broadcast reset to all players
+            for (ServerPlayer sp : player.getServer().getPlayerList().getPlayers()) {
+                sp.sendSystemMessage(Component.translatable("message.minersmarket.game_reset"));
+                GameStateSyncPacket.sendToPlayer(sp, manager);
+            }
             return InteractionResult.SUCCESS;
         }
         player.sendSystemMessage(Component.translatable("message.minersmarket.cannot_reset"));

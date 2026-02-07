@@ -63,11 +63,7 @@ public class MerchantEntity extends Mob {
         // Check win condition
         if (manager.hasReachedTarget(player.getUUID())) {
             manager.end();
-            // Announce winner to all players
-            player.getServer().getPlayerList().broadcastSystemMessage(
-                    Component.translatable("message.minersmarket.winner", player.getDisplayName()),
-                    false
-            );
+            manager.broadcastWinner(serverPlayer);
         }
 
         return InteractionResult.SUCCESS;

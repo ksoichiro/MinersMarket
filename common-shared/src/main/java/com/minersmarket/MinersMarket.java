@@ -1,11 +1,17 @@
 package com.minersmarket;
 
 import com.minersmarket.entity.MerchantEntityRenderer;
+import com.minersmarket.event.GameTickHandler;
+import com.minersmarket.hud.GameHudOverlay;
 import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.registry.ModBlocks;
 import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
+import com.minersmarket.state.GameStateManager;
+import dev.architectury.event.events.client.ClientGuiEvent;
+import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +25,21 @@ public class MinersMarket {
         ModBlocks.register();
         ModEntityTypes.register();
         ModCreativeTab.register();
+
+        LifecycleEvent.SERVER_LEVEL_LOAD.register(level -> {
+            if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+                GameStateManager.init(level);
+            }
+        });
+        LifecycleEvent.SERVER_STOPPING.register(server -> GameStateManager.clear());
+        TickEvent.SERVER_PRE.register(GameTickHandler::onServerTick);
+
         LOGGER.info("Miner's Market initialized");
     }
 
     public static void initClient() {
         GameStateSyncPacket.registerClientReceiver();
         EntityRendererRegistry.register(ModEntityTypes.MERCHANT, MerchantEntityRenderer::new);
+        ClientGuiEvent.RENDER_HUD.register(GameHudOverlay::render);
     }
 }

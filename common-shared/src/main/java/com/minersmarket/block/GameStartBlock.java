@@ -26,8 +26,7 @@ public class GameStartBlock extends Block {
             return InteractionResult.FAIL;
         }
         if (manager.canStart()) {
-            manager.start();
-            player.sendSystemMessage(Component.translatable("message.minersmarket.game_started"));
+            manager.startCountdown();
             return InteractionResult.SUCCESS;
         }
         player.sendSystemMessage(Component.translatable("message.minersmarket.cannot_start"));

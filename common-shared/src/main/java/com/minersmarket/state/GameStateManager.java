@@ -1,6 +1,11 @@
 package com.minersmarket.state;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.Map;
@@ -10,8 +15,13 @@ public class GameStateManager {
     private static final String DATA_ID = "minersmarket_game_state";
     public static final long TARGET_SALES = 10000;
 
+    private static final int COUNTDOWN_SECONDS = 3;
+    private static final int TICKS_PER_SECOND = 20;
+
     private static GameStateManager instance;
     private final GameStateSavedData savedData;
+    private ServerLevel serverLevel;
+    private int countdownTicks = -1;
 
     private GameStateManager(GameStateSavedData savedData) {
         this.savedData = savedData;
@@ -23,6 +33,7 @@ public class GameStateManager {
                 DATA_ID
         );
         instance = new GameStateManager(data);
+        instance.serverLevel = level;
     }
 
     public static GameStateManager getInstance() {
@@ -41,10 +52,19 @@ public class GameStateManager {
 
     // State transitions
 
-    public void start() {
-        savedData.state = GameState.IN_PROGRESS;
-        savedData.playTime = 0;
+    public void startCountdown() {
+        countdownTicks = COUNTDOWN_SECONDS * TICKS_PER_SECOND;
         savedData.salesAmounts.clear();
+        savedData.playTime = 0;
+        savedData.setDirty();
+    }
+
+    public boolean isCountdownActive() {
+        return countdownTicks >= 0;
+    }
+
+    private void start() {
+        savedData.state = GameState.IN_PROGRESS;
         savedData.setDirty();
     }
 
@@ -57,6 +77,7 @@ public class GameStateManager {
         savedData.state = GameState.NOT_STARTED;
         savedData.playTime = 0;
         savedData.salesAmounts.clear();
+        countdownTicks = -1;
         savedData.setDirty();
     }
 
@@ -83,9 +104,45 @@ public class GameStateManager {
     }
 
     public void tick() {
+        if (countdownTicks >= 0) {
+            tickCountdown();
+        }
         if (savedData.state == GameState.IN_PROGRESS) {
             savedData.playTime++;
             savedData.setDirty();
+        }
+    }
+
+    private void tickCountdown() {
+        if (countdownTicks > 0 && countdownTicks % TICKS_PER_SECOND == 0) {
+            int secondsLeft = countdownTicks / TICKS_PER_SECOND;
+            broadcastTitle(Component.literal(String.valueOf(secondsLeft)), 0, 25, 0);
+        } else if (countdownTicks == 0) {
+            broadcastTitle(
+                    Component.translatable("message.minersmarket.game_started"),
+                    0, 40, 10
+            );
+            start();
+        }
+        countdownTicks--;
+    }
+
+    private void broadcastTitle(Component title, int fadeIn, int stay, int fadeOut) {
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
+            player.connection.send(new ClientboundSetTitleTextPacket(title));
+        }
+    }
+
+    public void broadcastWinner(ServerPlayer winner) {
+        Component title = Component.translatable("message.minersmarket.winner_title");
+        Component subtitle = Component.translatable("message.minersmarket.winner_subtitle", winner.getDisplayName());
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 20));
+            player.connection.send(new ClientboundSetTitleTextPacket(title));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
         }
     }
 
@@ -96,7 +153,7 @@ public class GameStateManager {
     }
 
     public boolean canStart() {
-        return savedData.state == GameState.NOT_STARTED;
+        return savedData.state == GameState.NOT_STARTED && !isCountdownActive();
     }
 
     public boolean canReset() {
