@@ -1,10 +1,12 @@
 package com.minersmarket;
 
+import com.minersmarket.entity.MerchantEntityRenderer;
 import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.registry.ModBlocks;
 import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
+import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,5 +24,6 @@ public class MinersMarket {
 
     public static void initClient() {
         GameStateSyncPacket.registerClientReceiver();
+        EntityRendererRegistry.register(ModEntityTypes.MERCHANT, MerchantEntityRenderer::new);
     }
 }

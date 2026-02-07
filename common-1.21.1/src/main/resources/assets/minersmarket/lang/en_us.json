@@ -6,5 +6,6 @@
   "message.minersmarket.game_started": "The game has started!",
   "message.minersmarket.cannot_start": "The game cannot be started right now.",
   "message.minersmarket.game_reset": "The game has been reset.",
-  "message.minersmarket.cannot_reset": "The game cannot be reset right now."
+  "message.minersmarket.cannot_reset": "The game cannot be reset right now.",
+  "entity.minersmarket.merchant": "Merchant"
 }

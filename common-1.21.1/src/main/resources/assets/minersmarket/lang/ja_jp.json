@@ -6,5 +6,6 @@
   "message.minersmarket.game_started": "ゲームが開始されました！",
   "message.minersmarket.cannot_start": "現在ゲームを開始できません。",
   "message.minersmarket.game_reset": "ゲームがリセットされました。",
-  "message.minersmarket.cannot_reset": "現在ゲームをリセットできません。"
+  "message.minersmarket.cannot_reset": "現在ゲームをリセットできません。",
+  "entity.minersmarket.merchant": "商人"
 }
