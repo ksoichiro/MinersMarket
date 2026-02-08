@@ -106,13 +106,22 @@ public class MerchantModel extends EntityModel<MerchantEntity> {
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.head.xRot = headPitch * ((float) Math.PI / 180F);
 
+        // Head shake animation when unhappy
+        if (entity.getUnhappyCounter() > 0) {
+            this.head.zRot = 0.3F * Mth.sin(ageInTicks * 0.7F);
+        } else {
+            this.head.zRot = 0.0F;
+        }
+
         // Headwear follows head
         this.headwear.yRot = this.head.yRot;
         this.headwear.xRot = this.head.xRot;
+        this.headwear.zRot = this.head.zRot;
 
         // Nose follows head
         this.nose.yRot = this.head.yRot;
         this.nose.xRot = this.head.xRot;
+        this.nose.zRot = this.head.zRot;
 
         // Walking leg animation
         this.right_leg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;

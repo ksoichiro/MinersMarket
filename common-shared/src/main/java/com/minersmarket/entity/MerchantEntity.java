@@ -5,6 +5,9 @@ import com.minersmarket.state.GameState;
 import com.minersmarket.state.GameStateManager;
 import com.minersmarket.trade.PriceList;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -17,10 +20,35 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public class MerchantEntity extends Mob {
+    private static final EntityDataAccessor<Integer> DATA_UNHAPPY_COUNTER =
+            SynchedEntityData.defineId(MerchantEntity.class, EntityDataSerializers.INT);
+
     public MerchantEntity(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
         this.setNoAi(true);
         this.setInvulnerable(true);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_UNHAPPY_COUNTER, 0);
+    }
+
+    public int getUnhappyCounter() {
+        return this.entityData.get(DATA_UNHAPPY_COUNTER);
+    }
+
+    private void setUnhappyCounter(int counter) {
+        this.entityData.set(DATA_UNHAPPY_COUNTER, counter);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (getUnhappyCounter() > 0) {
+            setUnhappyCounter(getUnhappyCounter() - 1);
+        }
     }
 
     @Override
@@ -39,12 +67,16 @@ public class MerchantEntity extends Mob {
 
         if (!manager.canSell()) {
             player.sendSystemMessage(Component.translatable("message.minersmarket.game_not_started"));
+            setUnhappyCounter(20);
+            this.playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f);
             return InteractionResult.CONSUME;
         }
 
         ItemStack heldItem = player.getItemInHand(hand);
         if (heldItem.isEmpty() || !PriceList.isSellable(heldItem.getItem())) {
             player.sendSystemMessage(Component.translatable("message.minersmarket.not_sellable"));
+            setUnhappyCounter(20);
+            this.playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f);
             return InteractionResult.CONSUME;
         }
 
