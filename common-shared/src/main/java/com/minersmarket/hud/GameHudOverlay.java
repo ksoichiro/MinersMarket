@@ -22,7 +22,7 @@ import java.util.List;
 public class GameHudOverlay {
     private static final ResourceLocation COIN_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(MinersMarket.MOD_ID, "textures/gui/coin.png");
-    private static final int COIN_SIZE = 9;
+    private static final int COIN_SIZE = 8;
     private static final int MARGIN = 5;
 
     private static final long FLOAT_DURATION_MS = 1500;
