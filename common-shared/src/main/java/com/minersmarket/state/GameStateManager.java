@@ -111,7 +111,7 @@ public class GameStateManager {
         if (countdownTicks >= 0) {
             tickCountdown();
         }
-        if (savedData.state == GameState.IN_PROGRESS) {
+        if (savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED) {
             savedData.playTime++;
             savedData.setDirty();
         }
