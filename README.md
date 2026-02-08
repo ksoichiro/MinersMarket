@@ -4,6 +4,8 @@
 
 Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold! Built with Architectury for cross-platform support (Fabric + NeoForge).
 
+![Miner's Market Overview](docs/screenshots/featured-for-readme.png)
+
 ## Features
 
 - **Competitive Mining**: Race against other players to be the first to earn 10,000 gold
