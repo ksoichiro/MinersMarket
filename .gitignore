@@ -29,3 +29,7 @@ hs_err_pid*
 
 # Architectury
 .architectury-transformer/
+
+# Blockbench
+assets/*.java
+texture-preview/

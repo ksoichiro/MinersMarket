@@ -1,6 +1,7 @@
 package com.minersmarket;
 
 import com.minersmarket.entity.MerchantEntityRenderer;
+import com.minersmarket.entity.MerchantModel;
 import com.minersmarket.event.GameTickHandler;
 import com.minersmarket.event.PlayerSpawnHandler;
 import com.minersmarket.hud.GameHudOverlay;
@@ -15,6 +16,7 @@ import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
+import dev.architectury.registry.client.level.entity.EntityModelLayerRegistry;
 import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -64,6 +66,7 @@ public class MinersMarket {
 
     public static void initClient() {
         GameStateSyncPacket.registerClientReceiver();
+        EntityModelLayerRegistry.register(MerchantModel.LAYER_LOCATION, MerchantModel::createBodyLayer);
         EntityRendererRegistry.register(ModEntityTypes.MERCHANT, MerchantEntityRenderer::new);
         ClientGuiEvent.RENDER_HUD.register(GameHudOverlay::render);
     }
