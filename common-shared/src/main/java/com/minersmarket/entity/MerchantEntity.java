@@ -11,6 +11,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -52,8 +54,8 @@ public class MerchantEntity extends Mob {
 
         heldItem.shrink(sellCount);
         manager.addSalesAmount(player.getUUID(), totalEarned);
-
         ServerPlayer serverPlayer = (ServerPlayer) player;
+        serverPlayer.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0f, 1.0f);
         GameStateSyncPacket.sendToPlayer(serverPlayer, manager);
 
         // Check win condition (only for the first player to reach the target)
