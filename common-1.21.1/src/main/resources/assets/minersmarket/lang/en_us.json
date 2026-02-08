@@ -14,5 +14,6 @@
   "message.minersmarket.sold": "+%s gold",
   "message.minersmarket.winner": "%s has reached the target! Game over!",
   "message.minersmarket.winner_title": "Game Over!",
-  "message.minersmarket.winner_subtitle": "%s wins!"
+  "message.minersmarket.winner_subtitle": "%s wins!",
+  "hud.minersmarket.market_marker": "Market"
 }

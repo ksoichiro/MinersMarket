@@ -81,6 +81,9 @@ public class GameHudOverlay {
         String timeText = String.format("%02d:%02d", minutes, seconds);
         int timeWidth = mc.font.width(timeText);
         graphics.drawString(mc.font, timeText, screenWidth - timeWidth - MARGIN, y + 12, 0xFFFFFF, true);
+
+        // Market direction marker
+        MarketMarkerRenderer.render(graphics, mc, screenWidth, screenHeight);
     }
 
     private static void renderFloatingTexts(GuiGraphics graphics, Minecraft mc,
