@@ -46,16 +46,11 @@ public class MerchantEntity extends Mob {
         }
 
         int pricePerItem = PriceList.getPrice(heldItem.getItem());
-        int sellCount = player.isShiftKeyDown() ? heldItem.getCount() : 1;
+        int sellCount = heldItem.getCount();
         long totalEarned = (long) pricePerItem * sellCount;
 
         heldItem.shrink(sellCount);
         manager.addSalesAmount(player.getUUID(), totalEarned);
-
-        player.displayClientMessage(
-                Component.translatable("message.minersmarket.sold", totalEarned),
-                true
-        );
 
         ServerPlayer serverPlayer = (ServerPlayer) player;
         GameStateSyncPacket.sendToPlayer(serverPlayer, manager);

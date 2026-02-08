@@ -52,9 +52,9 @@ public class PlayerSpawnHandler {
                 MobEffects.NIGHT_VISION,
                 Integer.MAX_VALUE,
                 0,
-                false,
-                false,
-                true
+                true,  // ambient (no swirling particles)
+                false, // visible (no particles)
+                false  // showIcon (hide from HUD)
         ));
     }
 }

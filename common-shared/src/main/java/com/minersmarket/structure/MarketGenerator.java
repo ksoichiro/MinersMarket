@@ -1,80 +1,172 @@
 package com.minersmarket.structure;
 
-import com.minersmarket.registry.ModBlocks;
-import com.minersmarket.registry.ModEntityTypes;
+import com.minersmarket.MinersMarket;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.minecraft.world.phys.AABB;
+
+import java.util.List;
+import java.util.Optional;
 
 public class MarketGenerator {
-    private static final int WIDTH = 9;
-    private static final int DEPTH = 9;
-    private static final int WALL_HEIGHT = 4;
+    private static final ResourceLocation TEMPLATE_ID =
+            ResourceLocation.fromNamespaceAndPath(MinersMarket.MOD_ID, "market");
+    private static final int FILL_DEPTH = 10;
+    private static final int BLOCK_UPDATE_FLAGS = 2 | 16;
+    private static final int CLEANUP_EXTEND = 5;
+    private static final int SEARCH_RADIUS = 48;
+    private static final int SEARCH_STEP = 4;
+    private static final int FLOOR_HEIGHT = 3;
 
     /**
-     * Generate a simple market building at the given position.
-     * The position is the front-left corner of the building.
+     * Place the market NBT structure at the best location near the given X/Z.
+     * Searches for a flat, above-sea-level area within a few chunks.
+     * Sets the world spawn inside the market.
+     *
+     * @return true if successfully placed, false if template not found
      */
-    public static void generate(ServerLevel level, BlockPos origin) {
-        // Floor
-        for (int x = 0; x < WIDTH; x++) {
-            for (int z = 0; z < DEPTH; z++) {
-                level.setBlock(origin.offset(x, 0, z), Blocks.STONE_BRICKS.defaultBlockState(), 3);
+    public static boolean generate(ServerLevel level, BlockPos center) {
+        StructureTemplateManager templateManager = level.getStructureManager();
+        Optional<StructureTemplate> template = templateManager.get(TEMPLATE_ID);
+
+        if (template.isEmpty()) {
+            MinersMarket.LOGGER.warn("Market template not found: {}", TEMPLATE_ID);
+            return false;
+        }
+
+        StructureTemplate tmpl = template.get();
+        Vec3i size = tmpl.getSize();
+
+        // Find a suitable flat location near the center
+        BlockPos bestOrigin = findSuitableLocation(level, center, size);
+
+        // Find minimum solid ground placement Y across the footprint
+        int minPlacementY = Integer.MAX_VALUE;
+        for (int x = 0; x < size.getX(); x++) {
+            for (int z = 0; z < size.getZ(); z++) {
+                int placementY = findPlacementY(level, bestOrigin.getX() + x, bestOrigin.getZ() + z);
+                minPlacementY = Math.min(minPlacementY, placementY);
             }
         }
 
-        // Walls
-        for (int y = 1; y <= WALL_HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                for (int z = 0; z < DEPTH; z++) {
-                    boolean isWall = x == 0 || x == WIDTH - 1 || z == 0 || z == DEPTH - 1;
-                    if (!isWall) continue;
+        if (minPlacementY == Integer.MAX_VALUE) {
+            minPlacementY = level.getSeaLevel();
+        }
 
-                    // Entrance: 3-block wide opening on the front (z=0), leaving y=1,2,3 open
-                    if (z == 0 && x >= 3 && x <= 5 && y <= 3) {
-                        continue;
+        BlockPos placePos = new BlockPos(bestOrigin.getX(), minPlacementY, bestOrigin.getZ());
+
+        // Place the structure
+        StructurePlaceSettings settings = new StructurePlaceSettings();
+        tmpl.placeInWorld(level, placePos, placePos, settings, level.random, BLOCK_UPDATE_FLAGS);
+        removeDroppedItems(level, placePos, size);
+
+        // Fill gaps below the structure floor
+        for (int x = 0; x < size.getX(); x++) {
+            for (int z = 0; z < size.getZ(); z++) {
+                for (int dy = 1; dy <= FILL_DEPTH; dy++) {
+                    BlockPos fillPos = new BlockPos(bestOrigin.getX() + x, minPlacementY - dy, bestOrigin.getZ() + z);
+                    BlockState state = level.getBlockState(fillPos);
+                    if (state.isCollisionShapeFullBlock(level, fillPos)) {
+                        break;
                     }
+                    level.setBlock(fillPos, Blocks.DIRT.defaultBlockState(), BLOCK_UPDATE_FLAGS);
+                }
+            }
+        }
+        removeDroppedItems(level, placePos, size);
 
-                    level.setBlock(origin.offset(x, y, z), Blocks.STONE_BRICKS.defaultBlockState(), 3);
+        // Set world spawn inside the market (center, above the floor)
+        BlockPos spawnPos = new BlockPos(
+                placePos.getX() + size.getX() / 2,
+                placePos.getY() + FLOOR_HEIGHT,
+                placePos.getZ() + size.getZ() / 2
+        );
+        level.setDefaultSpawnPos(spawnPos, 0);
+
+        // Set spawn radius to 0 so players spawn exactly at the set position
+        level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_SPAWN_RADIUS).set(0, level.getServer());
+
+        MinersMarket.LOGGER.info("Market placed at {}, spawn set to {}", placePos, spawnPos);
+        return true;
+    }
+
+    /**
+     * Search for a flat, above-sea-level location near the center.
+     * Evaluates height variance across the structure footprint.
+     */
+    private static BlockPos findSuitableLocation(ServerLevel level, BlockPos center, Vec3i size) {
+        int seaLevel = level.getSeaLevel();
+        BlockPos bestPos = center;
+        int bestVariance = Integer.MAX_VALUE;
+
+        for (int dx = -SEARCH_RADIUS; dx <= SEARCH_RADIUS; dx += SEARCH_STEP) {
+            for (int dz = -SEARCH_RADIUS; dz <= SEARCH_RADIUS; dz += SEARCH_STEP) {
+                int cx = center.getX() + dx;
+                int cz = center.getZ() + dz;
+
+                int minY = Integer.MAX_VALUE;
+                int maxY = Integer.MIN_VALUE;
+                boolean belowSea = false;
+
+                // Sample heights across footprint (every 2 blocks for speed)
+                for (int x = 0; x < size.getX(); x += 2) {
+                    for (int z = 0; z < size.getZ(); z += 2) {
+                        int y = findPlacementY(level, cx + x, cz + z);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                        if (y < seaLevel) {
+                            belowSea = true;
+                        }
+                    }
+                }
+
+                if (belowSea || minY == Integer.MAX_VALUE) continue;
+
+                int variance = maxY - minY;
+                if (variance < bestVariance) {
+                    bestVariance = variance;
+                    bestPos = new BlockPos(cx, 0, cz);
                 }
             }
         }
 
-        // Roof (flat)
-        for (int x = 0; x < WIDTH; x++) {
-            for (int z = 0; z < DEPTH; z++) {
-                level.setBlock(origin.offset(x, WALL_HEIGHT + 1, z), Blocks.DARK_OAK_PLANKS.defaultBlockState(), 3);
+        return bestPos;
+    }
+
+    private static void removeDroppedItems(ServerLevel level, BlockPos placePos, Vec3i size) {
+        AABB area = new AABB(
+                placePos.getX() - CLEANUP_EXTEND,
+                placePos.getY() - FILL_DEPTH,
+                placePos.getZ() - CLEANUP_EXTEND,
+                placePos.getX() + size.getX() + CLEANUP_EXTEND,
+                placePos.getY() + size.getY() + FILL_DEPTH,
+                placePos.getZ() + size.getZ() + CLEANUP_EXTEND);
+
+        List<ItemEntity> items = level.getEntitiesOfClass(ItemEntity.class, area);
+        for (ItemEntity item : items) {
+            item.discard();
+        }
+    }
+
+    private static int findPlacementY(ServerLevel level, int x, int z) {
+        int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+        while (y > level.getMinBuildHeight()) {
+            BlockPos below = new BlockPos(x, y - 1, z);
+            BlockState state = level.getBlockState(below);
+            if (state.isCollisionShapeFullBlock(level, below)) {
+                return y;
             }
+            y--;
         }
-
-        // Clear interior
-        for (int y = 1; y <= WALL_HEIGHT; y++) {
-            for (int x = 1; x < WIDTH - 1; x++) {
-                for (int z = 1; z < DEPTH - 1; z++) {
-                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 3);
-                }
-            }
-        }
-
-        // Lanterns on walls
-        level.setBlock(origin.offset(1, 3, 1), Blocks.LANTERN.defaultBlockState(), 3);
-        level.setBlock(origin.offset(WIDTH - 2, 3, 1), Blocks.LANTERN.defaultBlockState(), 3);
-        level.setBlock(origin.offset(1, 3, DEPTH - 2), Blocks.LANTERN.defaultBlockState(), 3);
-        level.setBlock(origin.offset(WIDTH - 2, 3, DEPTH - 2), Blocks.LANTERN.defaultBlockState(), 3);
-
-        // Game Start Block (left of entrance inside)
-        level.setBlock(origin.offset(1, 1, 1), ModBlocks.GAME_START_BLOCK.get().defaultBlockState(), 3);
-
-        // Game Reset Block (right of entrance inside)
-        level.setBlock(origin.offset(WIDTH - 2, 1, 1), ModBlocks.GAME_RESET_BLOCK.get().defaultBlockState(), 3);
-
-        // Merchant entity (center back of building)
-        BlockPos merchantPos = origin.offset(WIDTH / 2, 1, DEPTH - 2);
-        var merchant = ModEntityTypes.MERCHANT.get().create(level, null, merchantPos, MobSpawnType.COMMAND, false, false);
-        if (merchant != null) {
-            merchant.setPos(merchantPos.getX() + 0.5, merchantPos.getY(), merchantPos.getZ() + 0.5);
-            level.addFreshEntity(merchant);
-        }
+        return y;
     }
 }

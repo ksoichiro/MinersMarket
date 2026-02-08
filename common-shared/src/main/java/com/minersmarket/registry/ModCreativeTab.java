@@ -15,9 +15,14 @@ public class ModCreativeTab {
 
     public static final RegistrySupplier<CreativeModeTab> MINERS_MARKET_TAB = TABS.register(
             "minersmarket_tab",
-            () -> CreativeTabRegistry.create(
-                    Component.translatable("itemGroup.minersmarket"),
-                    () -> new ItemStack(ModItems.MINERS_PICKAXE.get())
+            () -> CreativeTabRegistry.create(builder ->
+                    builder.title(Component.translatable("itemGroup.minersmarket"))
+                            .icon(() -> new ItemStack(ModItems.MINERS_PICKAXE.get()))
+                            .displayItems((params, output) -> {
+                                output.accept(ModItems.MINERS_PICKAXE.get());
+                                output.accept(ModBlocks.GAME_START_BLOCK_ITEM.get());
+                                output.accept(ModBlocks.GAME_RESET_BLOCK_ITEM.get());
+                            })
             )
     );
 

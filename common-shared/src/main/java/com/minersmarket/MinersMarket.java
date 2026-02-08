@@ -26,15 +26,22 @@ public class MinersMarket {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static void init() {
-        ModItems.register();
+        // ModBlocks must be registered before ModItems because ModBlocks
+        // adds block items to ModItems.ITEMS during class loading
         ModBlocks.register();
+        ModItems.register();
         ModEntityTypes.register();
         ModCreativeTab.register();
 
         LifecycleEvent.SERVER_LEVEL_LOAD.register(level -> {
             if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
                 GameStateManager.init(level);
-                generateMarketIfNeeded(level);
+            }
+        });
+        LifecycleEvent.SERVER_STARTED.register(server -> {
+            ServerLevel overworld = server.getLevel(net.minecraft.world.level.Level.OVERWORLD);
+            if (overworld != null) {
+                generateMarketIfNeeded(overworld);
             }
         });
         LifecycleEvent.SERVER_STOPPING.register(server -> GameStateManager.clear());
@@ -50,15 +57,9 @@ public class MinersMarket {
         if (manager == null || manager.isMarketGenerated()) return;
 
         BlockPos spawnPos = level.getSharedSpawnPos();
-        // Place market slightly in front of spawn
-        BlockPos marketOrigin = spawnPos.offset(-4, 0, 2);
-        // Find solid ground
-        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, marketOrigin.getX(), marketOrigin.getZ());
-        marketOrigin = new BlockPos(marketOrigin.getX(), y, marketOrigin.getZ());
-
-        MarketGenerator.generate(level, marketOrigin);
-        manager.setMarketGenerated();
-        LOGGER.info("Market generated at {}", marketOrigin);
+        if (MarketGenerator.generate(level, spawnPos)) {
+            manager.setMarketGenerated();
+        }
     }
 
     public static void initClient() {

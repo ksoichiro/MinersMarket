@@ -15,7 +15,7 @@ public class GameStateManager {
     private static final String DATA_ID = "minersmarket_game_state";
     public static final long TARGET_SALES = 10000;
 
-    private static final int COUNTDOWN_SECONDS = 3;
+    private static final int COUNTDOWN_SECONDS = 5;
     private static final int TICKS_PER_SECOND = 20;
 
     private static GameStateManager instance;
