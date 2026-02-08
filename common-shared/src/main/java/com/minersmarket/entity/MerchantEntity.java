@@ -17,11 +17,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
 public class MerchantEntity extends Mob {
     private static final EntityDataAccessor<Integer> DATA_UNHAPPY_COUNTER =
             SynchedEntityData.defineId(MerchantEntity.class, EntityDataSerializers.INT);
+    private int lookAtCounter;
+    private float originalYRot;
+    private float originalYBodyRot;
+    private float originalYHeadRot;
 
     public MerchantEntity(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
@@ -49,6 +54,17 @@ public class MerchantEntity extends Mob {
         if (getUnhappyCounter() > 0) {
             setUnhappyCounter(getUnhappyCounter() - 1);
         }
+        if (level().isClientSide()) {
+            // Stationary noAi mob: always keep body facing same direction as head
+            yBodyRot = yHeadRot;
+        } else if (lookAtCounter > 0) {
+            lookAtCounter--;
+            if (lookAtCounter == 0) {
+                setYRot(originalYRot);
+                yBodyRot = originalYBodyRot;
+                yHeadRot = originalYHeadRot;
+            }
+        }
     }
 
     @Override
@@ -59,6 +75,20 @@ public class MerchantEntity extends Mob {
         if (level().isClientSide()) {
             return InteractionResult.SUCCESS;
         }
+
+        // Face the player
+        if (lookAtCounter <= 0) {
+            originalYRot = getYRot();
+            originalYBodyRot = yBodyRot;
+            originalYHeadRot = yHeadRot;
+        }
+        double dx = player.getX() - this.getX();
+        double dz = player.getZ() - this.getZ();
+        float targetYRot = (float) (Mth.atan2(dz, dx) * (180.0F / (float) Math.PI)) - 90.0F;
+        this.setYRot(targetYRot);
+        this.yBodyRot = targetYRot;
+        this.yHeadRot = targetYRot;
+        lookAtCounter = 10;
 
         GameStateManager manager = GameStateManager.getInstance();
         if (manager == null) {
