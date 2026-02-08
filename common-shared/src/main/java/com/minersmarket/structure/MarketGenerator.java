@@ -1,12 +1,19 @@
 package com.minersmarket.structure;
 
 import com.minersmarket.MinersMarket;
+import com.minersmarket.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
@@ -26,6 +33,7 @@ public class MarketGenerator {
     private static final int SEARCH_RADIUS = 48;
     private static final int SEARCH_STEP = 4;
     private static final int FLOOR_HEIGHT = 3;
+    private static final int PLAYER_COUNT = 8;
 
     /**
      * Place the market NBT structure at the best location near the given X/Z.
@@ -83,6 +91,9 @@ public class MarketGenerator {
             }
         }
         removeDroppedItems(level, placePos, size);
+
+        // Fill large chest with equipment for players
+        fillChest(level, placePos, size);
 
         // Set world spawn inside the market (center, above the floor)
         BlockPos spawnPos = new BlockPos(
@@ -154,6 +165,43 @@ public class MarketGenerator {
         List<ItemEntity> items = level.getEntitiesOfClass(ItemEntity.class, area);
         for (ItemEntity item : items) {
             item.discard();
+        }
+    }
+
+    /**
+     * Find the first large chest in the structure and fill it with equipment for all players.
+     */
+    private static void fillChest(ServerLevel level, BlockPos placePos, Vec3i size) {
+        for (int x = 0; x < size.getX(); x++) {
+            for (int y = 0; y < size.getY(); y++) {
+                for (int z = 0; z < size.getZ(); z++) {
+                    BlockPos pos = placePos.offset(x, y, z);
+                    BlockState state = level.getBlockState(pos);
+                    if (state.getBlock() instanceof ChestBlock chestBlock) {
+                        Container container = ChestBlock.getContainer(chestBlock, state, level, pos, true);
+                        if (container != null && container.getContainerSize() > 27) {
+                            fillChestWithEquipment(level, container);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void fillChestWithEquipment(ServerLevel level, Container container) {
+        int slot = 0;
+        for (int i = 0; i < PLAYER_COUNT; i++) {
+            ItemStack pickaxe = new ItemStack(ModItems.MINERS_PICKAXE.get());
+            pickaxe.enchant(
+                    level.registryAccess().registryOrThrow(Registries.ENCHANTMENT)
+                            .getHolderOrThrow(Enchantments.FORTUNE),
+                    3
+            );
+            container.setItem(slot++, pickaxe);
+        }
+        for (int i = 0; i < PLAYER_COUNT; i++) {
+            container.setItem(slot++, new ItemStack(Items.BREAD, 64));
         }
     }
 
