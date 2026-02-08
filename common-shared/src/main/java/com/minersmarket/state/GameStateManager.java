@@ -149,7 +149,7 @@ public class GameStateManager {
     // State checks
 
     public boolean canSell() {
-        return savedData.state == GameState.IN_PROGRESS;
+        return savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED;
     }
 
     public boolean canStart() {

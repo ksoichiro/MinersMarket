@@ -1,6 +1,7 @@
 package com.minersmarket.entity;
 
 import com.minersmarket.network.GameStateSyncPacket;
+import com.minersmarket.state.GameState;
 import com.minersmarket.state.GameStateManager;
 import com.minersmarket.trade.PriceList;
 import net.minecraft.network.chat.Component;
@@ -55,8 +56,9 @@ public class MerchantEntity extends Mob {
         ServerPlayer serverPlayer = (ServerPlayer) player;
         GameStateSyncPacket.sendToPlayer(serverPlayer, manager);
 
-        // Check win condition
-        if (manager.hasReachedTarget(player.getUUID())) {
+        // Check win condition (only for the first player to reach the target)
+        if (manager.getState() == GameState.IN_PROGRESS
+                && manager.hasReachedTarget(player.getUUID())) {
             manager.end();
             manager.broadcastWinner(serverPlayer);
         }
