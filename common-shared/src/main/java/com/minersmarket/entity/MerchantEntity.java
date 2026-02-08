@@ -38,7 +38,7 @@ public class MerchantEntity extends Mob {
         }
 
         if (!manager.canSell()) {
-            player.sendSystemMessage(Component.translatable("message.minersmarket.cannot_sell"));
+            player.sendSystemMessage(Component.translatable("message.minersmarket.game_not_started"));
             return InteractionResult.CONSUME;
         }
 

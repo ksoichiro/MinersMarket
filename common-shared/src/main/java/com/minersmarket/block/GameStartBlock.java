@@ -2,6 +2,7 @@ package com.minersmarket.block;
 
 import com.minersmarket.state.GameStateManager;
 import net.minecraft.core.BlockPos;
+import com.minersmarket.state.GameState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +30,13 @@ public class GameStartBlock extends Block {
             manager.startCountdown();
             return InteractionResult.SUCCESS;
         }
-        player.sendSystemMessage(Component.translatable("message.minersmarket.cannot_start"));
+        if (manager.isCountdownActive()) {
+            player.sendSystemMessage(Component.translatable("message.minersmarket.countdown_in_progress"));
+        } else if (manager.getState() == GameState.IN_PROGRESS) {
+            player.sendSystemMessage(Component.translatable("message.minersmarket.already_in_progress"));
+        } else if (manager.getState() == GameState.ENDED) {
+            player.sendSystemMessage(Component.translatable("message.minersmarket.game_ended_reset_required"));
+        }
         return InteractionResult.CONSUME;
     }
 }

@@ -35,7 +35,7 @@ public class GameResetBlock extends Block {
             return InteractionResult.FAIL;
         }
         if (!manager.canReset()) {
-            player.sendSystemMessage(Component.translatable("message.minersmarket.cannot_reset"));
+            player.sendSystemMessage(Component.translatable("message.minersmarket.game_not_started"));
             return InteractionResult.CONSUME;
         }
 
