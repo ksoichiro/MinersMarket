@@ -21,7 +21,7 @@ public class MinersPickaxeItem extends PickaxeItem {
 
         @Override
         public float getAttackDamageBonus() {
-            return 3.0f;
+            return 1.0f;
         }
 
         @Override
