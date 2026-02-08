@@ -11,8 +11,8 @@ public class PriceList {
 
     static {
         PRICES.put(Items.COAL, 1);
-        PRICES.put(Items.RAW_COPPER, 3);
-        PRICES.put(Items.COPPER_INGOT, 5);
+        PRICES.put(Items.RAW_COPPER, 1);
+        PRICES.put(Items.COPPER_INGOT, 2);
         PRICES.put(Items.LAPIS_LAZULI, 3);
         PRICES.put(Items.RAW_IRON, 5);
         PRICES.put(Items.IRON_INGOT, 10);
