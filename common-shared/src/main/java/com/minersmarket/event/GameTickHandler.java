@@ -16,7 +16,7 @@ public class GameTickHandler {
 
         manager.tick();
 
-        if (manager.getState() == GameState.IN_PROGRESS) {
+        if (manager.getState() == GameState.IN_PROGRESS || manager.getState() == GameState.ENDED) {
             syncTimer++;
             if (syncTimer >= SYNC_INTERVAL) {
                 syncTimer = 0;

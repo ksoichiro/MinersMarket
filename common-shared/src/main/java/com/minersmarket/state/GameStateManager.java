@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -79,6 +80,7 @@ public class GameStateManager {
         savedData.state = GameState.NOT_STARTED;
         savedData.playTime = 0;
         savedData.salesAmounts.clear();
+        savedData.finishedPlayers.clear();
         countdownTicks = -1;
         savedData.setDirty();
     }
@@ -161,6 +163,22 @@ public class GameStateManager {
 
     public boolean canReset() {
         return savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED;
+    }
+
+    // Finish tracking
+
+    public boolean hasFinished(UUID playerId) {
+        return savedData.finishedPlayers.stream()
+                .anyMatch(fp -> fp.playerId().equals(playerId));
+    }
+
+    public void recordFinish(UUID playerId, String playerName) {
+        savedData.finishedPlayers.add(new FinishedPlayer(playerId, playerName, savedData.playTime));
+        savedData.setDirty();
+    }
+
+    public List<FinishedPlayer> getFinishedPlayers() {
+        return savedData.finishedPlayers;
     }
 
     // Win check

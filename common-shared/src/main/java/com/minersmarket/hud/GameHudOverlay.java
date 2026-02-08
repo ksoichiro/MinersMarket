@@ -82,6 +82,22 @@ public class GameHudOverlay {
         int timeWidth = mc.font.width(timeText);
         graphics.drawString(mc.font, timeText, screenWidth - timeWidth - MARGIN, y + 12, 0xFFFFFF, true);
 
+        // Ranking display (finished players)
+        var finishedPlayers = ClientGameState.getFinishedPlayers();
+        if (!finishedPlayers.isEmpty()) {
+            int rankY = y + 26;
+            for (int i = 0; i < finishedPlayers.size(); i++) {
+                var entry = finishedPlayers.get(i);
+                int ft = entry.finishTimeTicks() / 20;
+                String rankText = String.format("#%d %s  %02d:%02d",
+                        i + 1, entry.playerName(), ft / 60, ft % 60);
+                int rankWidth = mc.font.width(rankText);
+                int color = (i == 0) ? 0xFFD700 : 0xCCCCCC;
+                graphics.drawString(mc.font, rankText, screenWidth - rankWidth - MARGIN, rankY, color, true);
+                rankY += 11;
+            }
+        }
+
         // Market direction marker
         MarketMarkerRenderer.render(graphics, mc, screenWidth, screenHeight);
     }

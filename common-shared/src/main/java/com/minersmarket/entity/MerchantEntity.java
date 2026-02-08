@@ -56,13 +56,23 @@ public class MerchantEntity extends Mob {
         manager.addSalesAmount(player.getUUID(), totalEarned);
         ServerPlayer serverPlayer = (ServerPlayer) player;
         serverPlayer.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0f, 1.0f);
-        GameStateSyncPacket.sendToPlayer(serverPlayer, manager);
 
-        // Check win condition (only for the first player to reach the target)
-        if (manager.getState() == GameState.IN_PROGRESS
-                && manager.hasReachedTarget(player.getUUID())) {
-            manager.end();
-            manager.broadcastWinner(serverPlayer);
+        // Check if this player just reached the target
+        if (manager.hasReachedTarget(player.getUUID())
+                && !manager.hasFinished(player.getUUID())) {
+            manager.recordFinish(player.getUUID(), player.getDisplayName().getString());
+            if (manager.getState() == GameState.IN_PROGRESS) {
+                manager.end();
+                manager.broadcastWinner(serverPlayer);
+            }
+            // Sync ranking to all players
+            if (level().getServer() != null) {
+                for (ServerPlayer p : level().getServer().getPlayerList().getPlayers()) {
+                    GameStateSyncPacket.sendToPlayer(p, manager);
+                }
+            }
+        } else {
+            GameStateSyncPacket.sendToPlayer(serverPlayer, manager);
         }
 
         return InteractionResult.SUCCESS;
