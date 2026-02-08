@@ -16,5 +16,7 @@
   "message.minersmarket.winner": "%s が目標達成！ゲーム終了！",
   "message.minersmarket.winner_title": "ゲーム終了！",
   "message.minersmarket.winner_subtitle": "%s の勝利！",
+  "message.minersmarket.goal_reached_title": "目標達成！",
+  "message.minersmarket.goal_reached_subtitle": "%s が目標達成！",
   "hud.minersmarket.market_marker": "マーケット"
 }

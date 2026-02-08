@@ -16,5 +16,7 @@
   "message.minersmarket.winner": "%s has reached the target! Game over!",
   "message.minersmarket.winner_title": "Game Over!",
   "message.minersmarket.winner_subtitle": "%s wins!",
+  "message.minersmarket.goal_reached_title": "Goal Reached!",
+  "message.minersmarket.goal_reached_subtitle": "%s reached the goal!",
   "hud.minersmarket.market_marker": "Market"
 }

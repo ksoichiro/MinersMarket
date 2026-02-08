@@ -126,6 +126,8 @@ public class MerchantEntity extends Mob {
             if (manager.getState() == GameState.IN_PROGRESS) {
                 manager.end();
                 manager.broadcastWinner(serverPlayer);
+            } else {
+                manager.broadcastGoalReached(serverPlayer);
             }
             // Sync ranking to all players
             if (level().getServer() != null) {

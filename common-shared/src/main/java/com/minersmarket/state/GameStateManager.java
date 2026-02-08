@@ -151,6 +151,18 @@ public class GameStateManager {
         }
     }
 
+    public void broadcastGoalReached(ServerPlayer finisher) {
+        Component title = Component.translatable("message.minersmarket.goal_reached_title");
+        Component subtitle = Component.translatable("message.minersmarket.goal_reached_subtitle", finisher.getDisplayName());
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 20));
+            player.connection.send(new ClientboundSetTitleTextPacket(title));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+    }
+
     // State checks
 
     public boolean canSell() {
