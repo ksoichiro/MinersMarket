@@ -1,9 +1,11 @@
 package com.minersmarket.block;
 
+import com.minersmarket.event.PlayerSpawnHandler;
 import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.state.GameStateManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -47,7 +49,14 @@ public class GameResetBlock extends Block {
             // Confirmed: execute reset
             pendingConfirmations.remove(playerId);
             manager.reset();
+            ServerLevel serverLevel = (ServerLevel) level;
+            BlockPos spawnPos = serverLevel.getSharedSpawnPos();
             for (ServerPlayer sp : player.getServer().getPlayerList().getPlayers()) {
+                // Teleport to spawn and reset inventory/equipment
+                sp.teleportTo(serverLevel,
+                        spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
+                        sp.getYRot(), sp.getXRot());
+                PlayerSpawnHandler.resetPlayer(sp);
                 sp.sendSystemMessage(Component.translatable("message.minersmarket.game_reset"));
                 GameStateSyncPacket.sendToPlayer(sp, manager);
             }

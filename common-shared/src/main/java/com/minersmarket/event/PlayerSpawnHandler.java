@@ -33,6 +33,12 @@ public class PlayerSpawnHandler {
         return false;
     }
 
+    public static void resetPlayer(ServerPlayer player) {
+        player.getInventory().clearContent();
+        grantEquipment(player);
+        applyNightVision(player);
+    }
+
     private static void grantEquipment(ServerPlayer player) {
         // Miner's Pickaxe with Fortune III
         ItemStack pickaxe = new ItemStack(ModItems.MINERS_PICKAXE.get());
