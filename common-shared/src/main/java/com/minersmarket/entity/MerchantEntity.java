@@ -74,6 +74,11 @@ public class MerchantEntity extends Mob {
     }
 
     @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
+    }
+
+    @Override
     public boolean canBeLeashed() {
         return false;
     }
