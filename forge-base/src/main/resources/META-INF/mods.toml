@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="minersmarket"
+version="${version}"
+displayName="Miner's Market"
+description='''Compete to earn 10,000 gold by mining and selling ores!'''
+
+[[dependencies.minersmarket]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.minersmarket]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.minersmarket]]
+modId="architectury"
+mandatory=true
+versionRange="[9,)"
+ordering="AFTER"
+side="BOTH"

@@ -28,11 +28,14 @@ public class MarketGenerator {
     private static final ResourceLocation TEMPLATE_ID =
             ResourceLocation.fromNamespaceAndPath(MinersMarket.MOD_ID, "market");
     private static final int FILL_DEPTH = 10;
+    // UPDATE_CLIENTS | UPDATE_KNOWN_SHAPE: suppress shape update propagation so
+    // multi-block structures (doors, etc.) don't break during placement.
     private static final int BLOCK_UPDATE_FLAGS = 2 | 16;
     private static final int CLEANUP_EXTEND = 5;
     private static final int SEARCH_RADIUS = 48;
     private static final int SEARCH_STEP = 4;
-    private static final int FLOOR_HEIGHT = 3;
+    // Y offset from structure origin to player foot level (merchants are at Y=2 in the template)
+    private static final int FLOOR_HEIGHT = 2;
     private static final int PLAYER_COUNT = 8;
 
     /**
@@ -73,7 +76,8 @@ public class MarketGenerator {
         BlockPos placePos = new BlockPos(bestOrigin.getX(), minPlacementY, bestOrigin.getZ());
 
         // Place the structure
-        StructurePlaceSettings settings = new StructurePlaceSettings();
+        StructurePlaceSettings settings = new StructurePlaceSettings()
+                .setIgnoreEntities(false);
         tmpl.placeInWorld(level, placePos, placePos, settings, level.random, BLOCK_UPDATE_FLAGS);
         removeDroppedItems(level, placePos, size);
 

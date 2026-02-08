@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "minersmarket",
+  "version": "${version}",
+  "name": "Miner's Market",
+  "description": "Compete to earn 10,000 gold by mining and selling ores!",
+  "authors": [],
+  "contact": {},
+  "license": "All Rights Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.minersmarket.fabric.MinersMarketFabric"
+    ],
+    "client": [
+      "com.minersmarket.fabric.client.MinersMarketFabricClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "architectury": ">=9.0.0"
+  }
+}

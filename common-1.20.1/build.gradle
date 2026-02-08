@@ -1,0 +1,100 @@
+architectury {
+    common rootProject.ext.enabled_platforms.split(',')
+}
+
+loom {
+    //accessWidenerPath = file("src/main/resources/minersmarket.accesswidener")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir '../common-shared/src/main/java'
+        }
+        resources {
+            srcDir 'build/generated/nbt'
+        }
+    }
+}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // Architectury API
+    modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+}
+
+// NBT Structure Multi-Version Conversion
+// Converts 1.21.1 NBT structure files to 1.20.1 format (DataVersion update + directory rename)
+tasks.register('convertNbtStructures', Exec) {
+    group = 'build'
+    description = 'Convert NBT structure files from 1.21.1 to 1.20.1 format'
+
+    onlyIf {
+        project.ext.minecraft_version == '1.20.1'
+    }
+
+    // 1.21.1 uses 'structure' (singular), 1.20.1 uses 'structures' (plural)
+    def inputDir = rootProject.file('common-1.21.1/src/main/resources/data/minersmarket/structure')
+    def outputDir = file('build/generated/nbt/data/minersmarket/structures')
+    def scriptPath = rootProject.file('scripts/convert_nbt_1_21_to_1_20.py')
+
+    inputs.dir(inputDir).optional()
+    inputs.file(scriptPath)
+    outputs.dir(outputDir)
+
+    doFirst {
+        try {
+            exec {
+                commandLine 'python3', '-c', 'import nbtlib'
+                standardOutput = new ByteArrayOutputStream()
+                errorOutput = new ByteArrayOutputStream()
+            }
+        } catch (Exception e) {
+            throw new GradleException(
+                'Python 3 with nbtlib is required for NBT conversion. ' +
+                'Install with: pip3 install nbtlib'
+            )
+        }
+
+        if (!inputDir.exists()) {
+            logger.warn("Input directory does not exist: ${inputDir}")
+            logger.warn("Skipping NBT conversion")
+            return
+        }
+
+        if (!scriptPath.exists()) {
+            throw new GradleException("NBT conversion script not found: ${scriptPath}")
+        }
+
+        logger.lifecycle('')
+        logger.lifecycle('Converting NBT structures from 1.21.1 to 1.20.1 format...')
+        logger.lifecycle("  Input:  ${inputDir}")
+        logger.lifecycle("  Output: ${outputDir}")
+        logger.lifecycle('')
+    }
+
+    commandLine 'python3', scriptPath.absolutePath, '--batch', inputDir.absolutePath, outputDir.absolutePath
+}
+
+// Run NBT conversion before processing resources
+processResources.dependsOn convertNbtStructures
+
+// Expand pack_format variable in pack.mcmeta
+processResources {
+    inputs.property 'pack_format', project.ext.pack_format
+
+    filesMatching('pack.mcmeta') {
+        expand 'pack_format': project.ext.pack_format
+    }
+}
+
+// Set duplicates strategy for sourcesJar to avoid conflicts
+tasks.named('sourcesJar') {
+    dependsOn convertNbtStructures
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
