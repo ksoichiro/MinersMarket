@@ -23,18 +23,18 @@ This document outlines the phased implementation plan for the Miner's Market Min
 
 Set up the basic mod initialization and registration system.
 
-- [ ] 1-1. Create common mod initializer `MinersMarket` in `common-shared`
+- [x] 1-1. Create common mod initializer `MinersMarket` in `common-shared`
   - Mod ID constant: `minersmarket`
   - Common `init()` method called from platform-specific initializers
-- [ ] 1-2. Create Fabric mod initializer in `fabric-base`
+- [x] 1-2. Create Fabric mod initializer in `fabric-base`
   - Implement `ModInitializer`
   - Call common `init()`
   - Create `fabric.mod.json`
-- [ ] 1-3. Create NeoForge mod initializer in `neoforge-base`
+- [x] 1-3. Create NeoForge mod initializer in `neoforge-base`
   - Use `@Mod` annotation
   - Call common `init()`
   - Create `META-INF/neoforge.mods.toml`
-- [ ] 1-4. Create deferred registration helpers using Architectury API
+- [x] 1-4. Create deferred registration helpers using Architectury API
   - `ModItems` - Item registry
   - `ModBlocks` - Block registry
   - `ModEntityTypes` - Entity type registry
@@ -44,32 +44,32 @@ Set up the basic mod initialization and registration system.
 
 Implement the core state machine and persistence.
 
-- [ ] 2-1. Create `GameState` enum: `NOT_STARTED`, `IN_PROGRESS`, `ENDED`
-- [ ] 2-2. Create `GameStateManager` (server-side singleton)
+- [x] 2-1. Create `GameState` enum: `NOT_STARTED`, `IN_PROGRESS`, `ENDED`
+- [x] 2-2. Create `GameStateManager` (server-side singleton)
   - Current state
   - Per-player sales amounts (`Map<UUID, Long>`)
   - Play time counter (ticks since start)
   - Target sales amount (10,000)
   - State transition methods: `start()`, `end(player)`, `reset()`
   - Allowed operation checks per state (selling, start block, reset block)
-- [ ] 2-3. Persist game state using `SavedData` (vanilla level data)
+- [x] 2-3. Persist game state using `SavedData` (vanilla level data)
   - Save/load state, sales amounts, play time on world save/load
-- [ ] 2-4. Create network packets to sync state to clients
+- [x] 2-4. Create network packets to sync state to clients
   - `GameStateSyncPacket` - Sync game state, player's own sales amount, play time
   - Use Architectury networking API
-- [ ] 2-5. Create `ClientGameState` for client-side state cache
+- [x] 2-5. Create `ClientGameState` for client-side state cache
   - Stores current state, own sales amount, play time for HUD rendering
 
 ### Phase 3: Custom Items
 
 Implement mod-specific items.
 
-- [ ] 3-1. **Miner's Pickaxe** (`minersmarket:minerspickaxe`)
+- [x] 3-1. **Miner's Pickaxe** (`minersmarket:minerspickaxe`)
   - Custom pickaxe item with high mining speed and durability
   - Fortune III enchantment applied by default
   - Localized names: EN "Miner's Pickaxe" / JA "採掘者のツルハシ"
-- [ ] 3-2. Register items in `ModItems`
-- [ ] 3-3. Add item models and textures
+- [x] 3-2. Register items in `ModItems`
+- [x] 3-3. Add item models and textures
   - `assets/minersmarket/models/item/minerspickaxe.json`
   - `assets/minersmarket/textures/item/minerspickaxe.png`
 
@@ -77,41 +77,41 @@ Implement mod-specific items.
 
 Implement game control blocks.
 
-- [ ] 4-1. **Game Start Block** (`minersmarket:game_start_block`)
+- [x] 4-1. **Game Start Block** (`minersmarket:game_start_block`)
   - Right-click interaction: prompt to start the game (or start directly for MVP)
   - Only functional when game state is `NOT_STARTED`
   - Localized names: EN "Game Start Block" / JA "ゲーム開始ブロック"
-- [ ] 4-2. **Game Reset Block** (`minersmarket:game_reset_block`)
+- [x] 4-2. **Game Reset Block** (`minersmarket:game_reset_block`)
   - Right-click interaction: prompt to reset the game (or reset directly for MVP)
   - Only functional when game state is `IN_PROGRESS` or `ENDED`
   - Localized names: EN "Game Reset Block" / JA "ゲームリセットブロック"
-- [ ] 4-3. Register blocks and block items in `ModBlocks`
-- [ ] 4-4. Add block models, textures, and blockstates
-- [ ] 4-5. Add loot tables for the blocks
+- [x] 4-3. Register blocks and block items in `ModBlocks`
+- [x] 4-4. Add block models, textures, and blockstates
+- [x] 4-5. Add loot tables for the blocks
 
 ### Phase 5: Merchant Entity
 
 Implement the market NPC.
 
-- [ ] 5-1. Create `MerchantEntity` extending `Mob` (using villager model)
+- [x] 5-1. Create `MerchantEntity` extending `Mob` (using villager model)
   - ID: `minersmarket:merchant`
   - Non-hostile, immovable (NoAI), invulnerable
   - Right-click interaction opens selling UI
-- [ ] 5-2. Create `MerchantEntityRenderer` (client-side)
+- [x] 5-2. Create `MerchantEntityRenderer` (client-side)
   - Reuse villager model and texture (or custom texture)
-- [ ] 5-3. Register entity type in `ModEntityTypes`
-- [ ] 5-4. Register renderer on client side (Fabric/NeoForge specific)
+- [x] 5-3. Register entity type in `ModEntityTypes`
+- [x] 5-4. Register renderer on client side (Fabric/NeoForge specific)
 
 ### Phase 6: Selling System
 
 Implement the ore purchase/selling mechanism.
 
-- [ ] 6-1. Create `PriceList` defining sellable items and prices
+- [x] 6-1. Create `PriceList` defining sellable items and prices
   - Coal: 1, Raw Copper: 3, Copper Ingot: 5, Lapis Lazuli: 3
   - Raw Iron: 5, Iron Ingot: 10, Raw Gold: 7, Gold Ingot: 15
   - Redstone: 5, Diamond: 30, Emerald: 10, Amethyst Shard: 10
   - Netherite Ingot: 100
-- [ ] 6-2. Choose and implement selling UI approach
+- [x] 6-2. Choose and implement selling UI approach
   - **Option A**: Reuse vanilla trading UI (MerchantMenu) - preferred if feasible
   - **Option B**: Item-use on merchant (simpler, use items directly on NPC)
   - **Option C**: Custom GUI
@@ -119,60 +119,60 @@ Implement the ore purchase/selling mechanism.
     - Right-clicking merchant with a sellable item sells 1 item
     - Shift+right-click sells the entire stack
     - Feedback via action bar message showing amount earned
-- [ ] 6-3. Validate selling is only allowed during `IN_PROGRESS` state
-- [ ] 6-4. Update `GameStateManager` sales amounts on sell
-- [ ] 6-5. Sync updated sales amount to the selling player
-- [ ] 6-6. Check win condition after each sale (sales >= 10,000)
+- [x] 6-3. Validate selling is only allowed during `IN_PROGRESS` state
+- [x] 6-4. Update `GameStateManager` sales amounts on sell
+- [x] 6-5. Sync updated sales amount to the selling player
+- [x] 6-6. Check win condition after each sale (sales >= 10,000)
 
 ### Phase 7: HUD Display
 
 Implement client-side HUD overlay.
 
-- [ ] 7-1. Create `GameHudOverlay` (client-side)
+- [x] 7-1. Create `GameHudOverlay` (client-side)
   - Rendered using Architectury client events or platform-specific render events
-- [ ] 7-2. **Sales Amount Display**
+- [x] 7-2. **Sales Amount Display**
   - Position: Top-right, right-aligned
   - Format: `💰 3,250 / 10,000` (use gold coin sprite if emoji is problematic)
   - Create gold coin texture: `assets/minersmarket/textures/gui/coin.png`
-- [ ] 7-3. **Play Time Display**
+- [x] 7-3. **Play Time Display**
   - Position: Top-right, below sales amount
   - Format: `MM:SS`
   - Only displayed when game is `IN_PROGRESS` or `ENDED`
-- [ ] 7-4. Register HUD overlay on client side (Fabric/NeoForge specific)
+- [x] 7-4. Register HUD overlay on client side (Fabric/NeoForge specific)
 
 ### Phase 8: Market Structure
 
 Implement the market building structure.
 
-- [ ] 8-1. Design market structure using structure block / NBT
+- [x] 8-1. Design market structure using structure block / NBT
   - Include placement positions for: Merchant NPC, Game Start Block, Game Reset Block
   - Save as `data/minersmarket/structure/market.nbt`
-- [ ] 8-2. Create structure set and template pool
+- [x] 8-2. Create structure set and template pool
   - `data/minersmarket/worldgen/structure/market.json`
-  - `data/minersmarket/worldgen/structure_set/market.json`
+  - ~~`data/minersmarket/worldgen/structure_set/market.json`~~ (Not needed: MarketGenerator places the structure directly at spawn, so structure_set is unused)
   - `data/minersmarket/worldgen/template_pool/market.json`
-- [ ] 8-3. Implement single-generation logic at world spawn
+- [x] 8-3. Implement single-generation logic at world spawn
   - Generate market at initial spawn point on new world creation
   - Ensure it only generates once (flag in saved data)
-- [ ] 8-4. Support manual placement via `/place structure minersmarket:market`
-- [ ] 8-5. Set player initial spawn point near the market
+- [x] 8-4. Support manual placement via `/place structure minersmarket:market`
+- [x] 8-5. Set player initial spawn point near the market
 
 ### Phase 9: Game Flow
 
 Implement start, end, and reset logic.
 
-- [ ] 9-1. **Game Start**
+- [x] 9-1. **Game Start**
   - Game Start Block triggers countdown (3, 2, 1, Start!)
   - Countdown displayed as title text to all players
   - State transitions to `IN_PROGRESS` when countdown reaches zero
   - Play time counter begins
-- [ ] 9-2. **Game End (Win Detection)**
+- [x] 9-2. **Game End (Win Detection)**
   - Check after each sale if player's sales amount >= 10,000
   - First player to reach target wins
   - Display winner announcement to all players via title text
   - State transitions to `ENDED`
   - Play time counter stops
-- [ ] 9-3. **Game Reset**
+- [x] 9-3. **Game Reset**
   - Game Reset Block clears all sales amounts and play time
   - State transitions to `NOT_STARTED`
   - Announce reset to all players
@@ -181,11 +181,11 @@ Implement start, end, and reset logic.
 
 Implement initial equipment and permanent effects.
 
-- [ ] 10-1. **Initial Equipment on Spawn**
+- [x] 10-1. **Initial Equipment on Spawn**
   - Grant Miner's Pickaxe on first spawn and respawn (death)
   - Grant 1 stack of Bread on first spawn and respawn
   - Use player respawn event (Architectury)
-- [ ] 10-2. **Night Vision**
+- [x] 10-2. **Night Vision**
   - Apply permanent Night Vision effect (duration: effectively infinite, e.g., `Integer.MAX_VALUE` ticks)
   - Reapply on respawn
   - Use player tick event or respawn event
