@@ -29,6 +29,10 @@ public class GameHudOverlay {
     private static final float FLOAT_DISTANCE = 20f;
     private static final List<FloatingText> floatingTexts = new ArrayList<>();
 
+    public static void clearFloatingTexts() {
+        floatingTexts.clear();
+    }
+
     public static void addFloatingText(long amount) {
         // Top-right: compact "+X"
         floatingTexts.add(new FloatingText(

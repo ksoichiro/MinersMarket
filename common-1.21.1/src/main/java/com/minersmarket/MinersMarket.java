@@ -10,9 +10,11 @@ import com.minersmarket.registry.ModBlocks;
 import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
+import com.minersmarket.state.ClientGameState;
 import com.minersmarket.state.GameStateManager;
 import com.minersmarket.structure.MarketGenerator;
 import dev.architectury.event.events.client.ClientGuiEvent;
+import dev.architectury.event.events.client.ClientPlayerEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
@@ -69,5 +71,9 @@ public class MinersMarket {
         EntityModelLayerRegistry.register(MerchantModel.LAYER_LOCATION, MerchantModel::createBodyLayer);
         EntityRendererRegistry.register(ModEntityTypes.MERCHANT, MerchantEntityRenderer::new);
         ClientGuiEvent.RENDER_HUD.register(GameHudOverlay::render);
+        ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(player -> {
+            ClientGameState.reset();
+            GameHudOverlay.clearFloatingTexts();
+        });
     }
 }
