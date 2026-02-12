@@ -1,7 +1,7 @@
 // Multi-version build tasks
 // Defines custom Gradle tasks for building the mod across multiple Minecraft versions.
 
-def supportedVersions = ['1.20.1', '1.21.1', '1.21.3']
+def supportedVersions = ['1.20.1', '1.21.1', '1.21.3', '1.21.4']
 def taskGroup = 'miners market build'
 
 // ============================================================
