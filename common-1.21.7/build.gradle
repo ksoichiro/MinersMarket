@@ -1,0 +1,41 @@
+architectury {
+    common rootProject.ext.enabled_platforms.split(',')
+}
+
+loom {
+    //accessWidenerPath = file("src/main/resources/minersmarket.accesswidener")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            // common-shared sources are copied into src/main/java for 1.21.7
+            // because 1.21.2+ has breaking API changes in ModEntityTypes, ModItems, etc.
+        }
+    }
+}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // Architectury API
+    modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+}
+
+// Expand pack_format variable in pack.mcmeta
+processResources {
+    inputs.property 'pack_format', project.ext.pack_format
+
+    filesMatching('pack.mcmeta') {
+        expand 'pack_format': project.ext.pack_format
+    }
+}
+
+// Set duplicates strategy for sourcesJar to avoid conflicts
+tasks.named('sourcesJar') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

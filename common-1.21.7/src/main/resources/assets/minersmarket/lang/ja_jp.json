@@ -1,0 +1,22 @@
+{
+  "itemGroup.minersmarket": "マイナーズマーケット",
+  "item.minersmarket.minerspickaxe": "採掘者のツルハシ",
+  "block.minersmarket.game_start_block": "ゲーム開始ブロック",
+  "block.minersmarket.game_reset_block": "ゲームリセットブロック",
+  "message.minersmarket.game_started": "スタート！",
+  "message.minersmarket.already_in_progress": "ゲームはすでに進行中です。",
+  "message.minersmarket.countdown_in_progress": "まもなくゲームが開始します。",
+  "message.minersmarket.game_ended_reset_required": "ゲームは終了しています。リセットして新しいゲームを開始してください。",
+  "message.minersmarket.game_not_started": "ゲームがまだ開始されていません。",
+  "message.minersmarket.game_reset": "ゲームがリセットされました。",
+  "message.minersmarket.confirm_reset": "リセットするには5秒以内にもう一度クリックしてください。",
+  "entity.minersmarket.merchant": "商人",
+  "message.minersmarket.not_sellable": "このアイテムは売却できません。",
+  "message.minersmarket.sold": "+%s ゴールド",
+  "message.minersmarket.winner": "%s が目標達成！ゲーム終了！",
+  "message.minersmarket.winner_title": "ゲーム終了！",
+  "message.minersmarket.winner_subtitle": "%s の勝利！",
+  "message.minersmarket.goal_reached_title": "目標達成！",
+  "message.minersmarket.goal_reached_subtitle": "%s が目標達成！",
+  "hud.minersmarket.market_marker": "マーケット"
+}
