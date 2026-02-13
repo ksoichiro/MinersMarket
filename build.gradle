@@ -46,7 +46,16 @@ subprojects {
 
     // Propagate version-specific properties to subprojects
     ext.minecraft_version = rootProject.ext.minecraft_version
-    ext.pack_format = rootProject.ext.pack_format
+    // MC 1.21.9+ uses min_format/max_format instead of pack_format
+    if (rootProject.ext.has('pack_format')) {
+        ext.pack_format = rootProject.ext.pack_format
+    }
+    if (rootProject.ext.has('pack_format_min')) {
+        ext.pack_format_min = rootProject.ext.pack_format_min
+    }
+    if (rootProject.ext.has('pack_format_max')) {
+        ext.pack_format_max = rootProject.ext.pack_format_max
+    }
     ext.architectury_api_version = rootProject.ext.architectury_api_version
     ext.fabric_loader_version = rootProject.ext.fabric_loader_version
     ext.fabric_api_version = rootProject.ext.fabric_api_version
@@ -101,10 +110,19 @@ subprojects {
     // Common resource processing for platform modules (fabric, neoforge, forge)
     if (project.name in ['fabric', 'neoforge', 'forge']) {
         tasks.withType(ProcessResources).configureEach {
-            inputs.property 'pack_format', project.ext.pack_format
-
-            filesMatching('pack.mcmeta') {
-                expand 'pack_format': project.ext.pack_format
+            if (project.ext.has('pack_format')) {
+                inputs.property 'pack_format', project.ext.pack_format
+                filesMatching('pack.mcmeta') {
+                    expand 'pack_format': project.ext.pack_format
+                }
+            }
+            if (project.ext.has('pack_format_min')) {
+                inputs.property 'pack_format_min', project.ext.pack_format_min
+                inputs.property 'pack_format_max', project.ext.pack_format_max
+                filesMatching('pack.mcmeta') {
+                    expand 'pack_format_min': project.ext.pack_format_min,
+                           'pack_format_max': project.ext.pack_format_max
+                }
             }
         }
     }
