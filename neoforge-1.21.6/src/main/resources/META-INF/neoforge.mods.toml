@@ -1,0 +1,30 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "All Rights Reserved"
+
+[[mods]]
+modId = "minersmarket"
+version = "${version}"
+displayName = "Miner's Market"
+description = '''Compete to earn 10,000 gold by mining and selling ores!'''
+
+[[dependencies.minersmarket]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.6,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.minersmarket]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.6,1.21.7)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.minersmarket]]
+modId = "architectury"
+type = "required"
+versionRange = "[17,)"
+ordering = "AFTER"
+side = "BOTH"
