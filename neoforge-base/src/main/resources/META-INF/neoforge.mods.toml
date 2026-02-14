@@ -1,12 +1,14 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "All Rights Reserved"
+license = "LGPL-3.0-only"
 
 [[mods]]
 modId = "minersmarket"
 version = "${version}"
 displayName = "Miner's Market"
 description = '''Compete to earn 10,000 gold by mining and selling ores!'''
+authors = "ksoichiro"
+displayURL = "https://github.com/ksoichiro/MinersMarket"
 
 [[dependencies.minersmarket]]
 modId = "neoforge"
