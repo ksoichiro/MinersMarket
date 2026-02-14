@@ -1,0 +1,916 @@
+// Production run support for testing built Mod JARs in a near-production environment.
+// Supports Fabric, NeoForge, and Forge loaders.
+//
+// Usage:
+//   ./gradlew :fabric:runProd -Ptarget_mc_version=1.21.1
+//   ./gradlew :neoforge:runProd -Ptarget_mc_version=1.21.1
+//   ./gradlew :forge:runProd -Ptarget_mc_version=1.20.1
+
+import groovy.json.JsonSlurper
+
+// --- Configuration ---
+def prodBaseDir = "${rootDir}/run-prod"
+def prodCacheDir = "${prodBaseDir}/cache"
+def mcVersion = project.ext.minecraft_version
+
+// --- Helper: Download file with caching ---
+// Skips download if file already exists. Delete run-prod/cache/ to force re-download.
+ext.prodDownloadFile = { String url, File dest ->
+    if (dest.exists()) return
+    dest.parentFile.mkdirs()
+    logger.lifecycle("  Downloading: ${dest.name}")
+    ant.get(src: url, dest: dest, verbose: false)
+}
+
+// --- Helper: Get current OS name for Mojang manifest rules ---
+ext.prodGetMojangOs = {
+    def osName = System.getProperty('os.name').toLowerCase()
+    if (osName.contains('mac')) return 'osx'
+    if (osName.contains('win')) return 'windows'
+    return 'linux'
+}
+
+// --- Helper: Check if a library passes Mojang OS rules ---
+ext.prodIsLibraryAllowed = { lib ->
+    if (!lib.rules) return true
+    def allowed = false
+    def currentOs = prodGetMojangOs()
+    lib.rules.each { rule ->
+        def osMatch = true
+        if (rule.os) {
+            osMatch = (rule.os.name == currentOs)
+            if (osMatch && rule.os.arch) {
+                osMatch = (rule.os.arch == System.getProperty('os.arch'))
+            }
+        }
+        if (osMatch) {
+            allowed = (rule.action == 'allow')
+        }
+    }
+    return allowed
+}
+
+// --- Helper: Parse and cache Mojang version JSON ---
+ext.prodGetVersionJson = { String version ->
+    def manifestFile = file("${prodCacheDir}/manifest/version_manifest_v2.json")
+    prodDownloadFile('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json', manifestFile)
+
+    def manifest = new JsonSlurper().parse(manifestFile)
+    def versionEntry = manifest.versions.find { it.id == version }
+    if (!versionEntry) {
+        throw new GradleException("Minecraft version ${version} not found in Mojang manifest. " +
+            "Delete ${manifestFile} to refresh.")
+    }
+
+    def versionFile = file("${prodCacheDir}/versions/${version}.json")
+    prodDownloadFile(versionEntry.url, versionFile)
+    return new JsonSlurper().parse(versionFile)
+}
+
+// --- Helper: Collect library files for the current platform ---
+ext.prodGetLibraryFiles = { versionJson ->
+    def librariesDir = file("${prodCacheDir}/libraries")
+    def files = []
+    versionJson.libraries.each { lib ->
+        if (!prodIsLibraryAllowed(lib)) return
+        if (lib.downloads?.artifact) {
+            def f = file("${librariesDir}/${lib.downloads.artifact.path}")
+            if (f.exists()) files.add(f)
+        }
+    }
+    return files
+}
+
+// --- Helper: Convert Maven coordinate to relative path ---
+// Supports classifier (group:artifact:version:classifier) and @ext notation.
+// e.g. "org.ow2.asm:asm:9.9" -> "org/ow2/asm/asm/9.9/asm-9.9.jar"
+// e.g. "net.neoforged:mergetool:2.0.0:api" -> "net/neoforged/mergetool/2.0.0/mergetool-2.0.0-api.jar"
+// e.g. "com.example:lib:1.0@zip" -> "com/example/lib/1.0/lib-1.0.zip"
+ext.prodMavenCoordToPath = { String coord ->
+    def extension = 'jar'
+    def coordBody = coord
+    if (coord.contains('@')) {
+        extension = coord.substring(coord.indexOf('@') + 1)
+        coordBody = coord.substring(0, coord.indexOf('@'))
+    }
+    def parts = coordBody.split(':')
+    def group = parts[0]
+    def artifact = parts[1]
+    def version = parts[2]
+    def classifier = parts.length > 3 ? parts[3] : null
+    def filename = classifier
+        ? "${artifact}-${version}-${classifier}.${extension}"
+        : "${artifact}-${version}.${extension}"
+    return "${group.replace('.', '/')}/${artifact}/${version}/${filename}"
+}
+
+// --- Helper: Fetch and cache Fabric Loader profile from Meta API ---
+ext.prodGetFabricProfile = { String gameVersion, String loaderVersion ->
+    def profileFile = file("${prodCacheDir}/fabric-profile/${gameVersion}-${loaderVersion}.json")
+    prodDownloadFile(
+        "https://meta.fabricmc.net/v2/versions/loader/${gameVersion}/${loaderVersion}/profile/json",
+        profileFile
+    )
+    return new JsonSlurper().parse(profileFile)
+}
+
+// --- Helper: Find loader version JSON in install directory ---
+// Searches installDir/versions/ for a non-vanilla version JSON (used by installer-based loaders).
+ext.prodFindLoaderVersionJson = { File installDir, String vanillaVersion ->
+    def versionsDir = new File(installDir, 'versions')
+    if (!versionsDir.exists()) return null
+    File found = null
+    versionsDir.eachDir { dir ->
+        if (dir.name != vanillaVersion) {
+            def jsonFile = new File(dir, "${dir.name}.json")
+            if (jsonFile.exists()) found = jsonFile
+        }
+    }
+    return found
+}
+
+// --- Helper: Merge loader version JSON with vanilla JSON (inheritsFrom processing) ---
+ext.prodMergeVersionJsons = { loaderJson, vanillaJson ->
+    def merged = [:]
+    merged.mainClass = loaderJson.mainClass
+    merged.libraries = []
+    if (loaderJson.libraries) merged.libraries.addAll(loaderJson.libraries)
+    if (vanillaJson.libraries) merged.libraries.addAll(vanillaJson.libraries)
+    merged.arguments = [jvm: [], game: []]
+    if (loaderJson.arguments?.jvm) merged.arguments.jvm.addAll(loaderJson.arguments.jvm)
+    if (vanillaJson.arguments?.jvm) merged.arguments.jvm.addAll(vanillaJson.arguments.jvm)
+    if (loaderJson.arguments?.game) merged.arguments.game.addAll(loaderJson.arguments.game)
+    if (vanillaJson.arguments?.game) merged.arguments.game.addAll(vanillaJson.arguments.game)
+    return merged
+}
+
+// --- Helper: Evaluate argument rules from version JSON ---
+// Returns true if the argument should be included. Feature-gated args are excluded.
+ext.prodEvalArgumentRules = { rules ->
+    if (!rules) return true
+    def currentOs = prodGetMojangOs()
+    def allowed = false
+    for (rule in rules) {
+        // Skip feature-gated args (e.g., demo mode, custom resolution)
+        if (rule.features) return false
+        def osMatch = true
+        if (rule.os) {
+            osMatch = (rule.os.name == currentOs)
+            if (osMatch && rule.os.arch) {
+                osMatch = System.getProperty('os.arch').contains(rule.os.arch)
+            }
+        }
+        if (osMatch) {
+            allowed = (rule.action == 'allow')
+        }
+    }
+    return allowed
+}
+
+// --- Helper: Substitute placeholder strings ---
+ext.prodSubstitutePlaceholders = { String str, Map<String, String> placeholders ->
+    def result = str
+    placeholders.each { key, value ->
+        result = result.replace(key, value)
+    }
+    return result
+}
+
+// --- Helper: Extract native libraries from classifier JARs ---
+// For MC versions using the old natives system (pre-1.19), extracts platform-specific
+// native libraries (.dylib, .dll, .so) from classifier JARs to the specified directory.
+// On macOS ARM64, LWJGL < 3.3.1 doesn't ship ARM64 natives, so this helper
+// downloads LWJGL 3.3.1 ARM64 natives from Maven Central as a replacement.
+ext.prodExtractNatives = { versionJson, File nativesDir ->
+    def librariesDir = file("${prodCacheDir}/libraries")
+    def currentOs = prodGetMojangOs()
+    def isArm64Mac = (currentOs == 'osx' && System.getProperty('os.arch') == 'aarch64')
+    def lwjglArm64Modules = [] as Set
+
+    versionJson.libraries.each { lib ->
+        if (!prodIsLibraryAllowed(lib)) return
+        if (!lib.natives) return
+
+        def nativeClassifier = lib.natives[currentOs]
+        if (!nativeClassifier) return
+
+        nativeClassifier = nativeClassifier.replace('${arch}',
+            System.getProperty('os.arch') == 'aarch64' ? 'arm64' : '64')
+
+        def nativeArtifact = lib.downloads?.classifiers?.get(nativeClassifier)
+        if (!nativeArtifact) return
+
+        // On ARM64 Mac, collect old LWJGL modules for later ARM64 native patching
+        if (isArm64Mac && lib.name?.startsWith('org.lwjgl')) {
+            def parts = lib.name.split(':')
+            if (parts.length >= 3) {
+                def version = parts[2]
+                if (version.startsWith('3.2.') || version == '3.3.0') {
+                    lwjglArm64Modules.add(parts[1])
+                    return // Skip extracting x86_64 natives; ARM64 patch below will handle it
+                }
+            }
+        }
+
+        def nativeJar = new File(librariesDir, nativeArtifact.path)
+        if (!nativeJar.exists()) return
+
+        def excludePatterns = lib.extract?.exclude ?: []
+
+        ant.unzip(src: nativeJar, dest: nativesDir) {
+            patternset {
+                excludePatterns.each { p ->
+                    exclude(name: "${p}**")
+                }
+            }
+        }
+    }
+
+    // Download and extract LWJGL 3.3.1 ARM64 natives for old MC versions on Apple Silicon
+    if (!lwjglArm64Modules.isEmpty()) {
+        def lwjglArm64Version = '3.3.1'
+        def arm64CacheDir = file("${prodCacheDir}/lwjgl-arm64")
+
+        lwjglArm64Modules.each { module ->
+            def path = "org/lwjgl/${module}/${lwjglArm64Version}/${module}-${lwjglArm64Version}-natives-macos-arm64.jar"
+            def dest = new File(arm64CacheDir, path)
+            prodDownloadFile("https://repo1.maven.org/maven2/${path}", dest)
+
+            if (dest.exists()) {
+                // Extract to temp dir, then flatten .dylib files to natives root.
+                // LWJGL 3.3.1 JARs use nested paths (macos/arm64/org/lwjgl/...)
+                // but LWJGL 3.2.x expects flat .dylib files in java.library.path.
+                def tempDir = new File(nativesDir, '.arm64-extract-tmp')
+                ant.unzip(src: dest, dest: tempDir) {
+                    patternset {
+                        exclude(name: 'META-INF/**')
+                    }
+                }
+                tempDir.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+                    if (f.name.endsWith('.dylib')) {
+                        ant.copy(file: f, todir: nativesDir, overwrite: true)
+                    }
+                }
+                ant.delete(dir: tempDir)
+            }
+        }
+        logger.lifecycle("  Patched ${lwjglArm64Modules.size()} LWJGL modules with ARM64 natives")
+    }
+}
+
+// --- Helper: Replace LWJGL < 3.3.1 JARs with 3.3.1 ARM64 versions on the classpath ---
+// On macOS ARM64, old LWJGL versions lack ARM64 support. This helper replaces both
+// the API JARs and adds native JARs on the classpath so versions match.
+ext.prodPatchLwjglForArm64 = { List<File> classpathFiles ->
+    if (prodGetMojangOs() != 'osx' || System.getProperty('os.arch') != 'aarch64') {
+        return classpathFiles
+    }
+
+    // Detect old LWJGL API JARs (e.g., lwjgl-3.2.1.jar, lwjgl-glfw-3.2.1.jar)
+    def oldLwjglPattern = ~/^(lwjgl(?:-[a-z]+)*)-3\.(?:2\.\d+|3\.0)\.jar$/
+    def modulesToReplace = [] as Set
+    classpathFiles.each { f ->
+        def m = oldLwjglPattern.matcher(f.name)
+        if (m.matches()) {
+            modulesToReplace.add(m.group(1))
+        }
+    }
+
+    if (modulesToReplace.isEmpty()) return classpathFiles
+
+    def lwjglVersion = '3.3.1'
+    def arm64CacheDir = file("${prodCacheDir}/lwjgl-arm64")
+
+    // Filter out all old LWJGL JARs (API + native classifier JARs)
+    def filtered = classpathFiles.findAll { f ->
+        !(f.name.startsWith('lwjgl') && (f.name.contains('-3.2.') || f.name.contains('-3.3.0')))
+    }
+
+    // Add LWJGL 3.3.1 API JARs as replacements
+    modulesToReplace.each { module ->
+        def apiPath = "org/lwjgl/${module}/${lwjglVersion}/${module}-${lwjglVersion}.jar"
+        def apiDest = new File(arm64CacheDir, apiPath)
+        prodDownloadFile("https://repo1.maven.org/maven2/${apiPath}", apiDest)
+        if (apiDest.exists()) filtered.add(apiDest)
+    }
+
+    logger.lifecycle("  Replaced ${modulesToReplace.size()} LWJGL modules with ${lwjglVersion} for ARM64: ${modulesToReplace}")
+    return filtered
+}
+
+// --- Helper: Process arguments list from version JSON ---
+// Evaluates rules, substitutes placeholders, skips -cp/${classpath} (handled by JavaExec).
+ext.prodProcessArguments = { List argsList, Map<String, String> placeholders ->
+    def result = []
+    def skipNext = false
+    for (int i = 0; i < argsList.size(); i++) {
+        if (skipNext) { skipNext = false; continue }
+        def arg = argsList[i]
+        if (arg instanceof Map) {
+            if (!prodEvalArgumentRules(arg.rules)) continue
+            def values = arg.value instanceof List ? arg.value : [arg.value]
+            values.each { v ->
+                def s = prodSubstitutePlaceholders(v.toString(), placeholders)
+                if (s != '${classpath}') result.add(s)
+            }
+        } else {
+            def s = arg.toString()
+            if (s == '-cp' || s == '--classpath') {
+                skipNext = true
+                continue
+            }
+            if (s == '${classpath}') continue
+            result.add(prodSubstitutePlaceholders(s, placeholders))
+        }
+    }
+    return result
+}
+
+// --- Helper: Collect library files from merged version JSON using install directory ---
+ext.prodGetInstallerLibraryFiles = { mergedJson, File installDir ->
+    def librariesDir = new File(installDir, 'libraries')
+    def files = []
+    mergedJson.libraries.each { lib ->
+        if (!prodIsLibraryAllowed(lib)) return
+        File f = null
+        if (lib.downloads?.artifact?.path) {
+            f = new File(librariesDir, lib.downloads.artifact.path)
+        } else if (lib.name) {
+            def path = prodMavenCoordToPath(lib.name)
+            f = new File(librariesDir, path)
+        }
+        if (f != null && f.exists()) files.add(f)
+    }
+    return files
+}
+
+// ============================================================
+// Task: downloadMinecraft
+// Downloads vanilla client JAR, libraries, and assets.
+// All files are cached in run-prod/cache/.
+// ============================================================
+tasks.register('downloadMinecraft') {
+    group = 'miners market prod'
+    description = "Download vanilla Minecraft client, libraries, and assets for ${mcVersion}"
+
+    doLast {
+        def versionJson = prodGetVersionJson(mcVersion)
+
+        // 1. Client JAR
+        logger.lifecycle("=== Client JAR ===")
+        def clientJar = file("${prodCacheDir}/client/${mcVersion}.jar")
+        prodDownloadFile(versionJson.downloads.client.url, clientJar)
+        if (clientJar.exists()) {
+            logger.lifecycle("  OK: ${clientJar.name}")
+        }
+
+        // 2. Libraries (filtered by OS rules)
+        logger.lifecycle("=== Libraries ===")
+        def librariesDir = file("${prodCacheDir}/libraries")
+        def libCount = 0
+        versionJson.libraries.each { lib ->
+            if (!prodIsLibraryAllowed(lib)) return
+
+            if (lib.downloads?.artifact) {
+                def dest = file("${librariesDir}/${lib.downloads.artifact.path}")
+                prodDownloadFile(lib.downloads.artifact.url, dest)
+                libCount++
+            }
+
+            // Native classifier JARs (for MC 1.18.2 and earlier)
+            if (lib.natives) {
+                def currentOs = prodGetMojangOs()
+                def nativeClassifier = lib.natives[currentOs]
+                if (nativeClassifier) {
+                    // Replace ${arch} placeholder used in some Windows native classifiers
+                    nativeClassifier = nativeClassifier.replace('${arch}',
+                        System.getProperty('os.arch') == 'aarch64' ? 'arm64' : '64')
+                    def nativeArtifact = lib.downloads?.classifiers?.get(nativeClassifier)
+                    if (nativeArtifact) {
+                        def dest = file("${librariesDir}/${nativeArtifact.path}")
+                        prodDownloadFile(nativeArtifact.url, dest)
+                    }
+                }
+            }
+        }
+        logger.lifecycle("  ${libCount} libraries ready")
+
+        // 3. Assets (index + objects, shared across MC versions with same asset index)
+        logger.lifecycle("=== Assets ===")
+        def assetsDir = file("${prodCacheDir}/assets")
+        def assetIndex = versionJson.assetIndex
+        def indexFile = file("${assetsDir}/indexes/${assetIndex.id}.json")
+        prodDownloadFile(assetIndex.url, indexFile)
+
+        def objects = new JsonSlurper().parse(indexFile).objects
+        def total = objects.size()
+        def downloaded = 0
+        def skipped = 0
+        objects.each { name, obj ->
+            def hash = obj.hash
+            def prefix = hash.substring(0, 2)
+            def dest = file("${assetsDir}/objects/${prefix}/${hash}")
+            if (dest.exists()) {
+                skipped++
+            } else {
+                prodDownloadFile("https://resources.download.minecraft.net/${prefix}/${hash}", dest)
+                downloaded++
+            }
+            if ((downloaded + skipped) % 500 == 0) {
+                logger.lifecycle("  Assets: ${downloaded + skipped}/${total}")
+            }
+        }
+        logger.lifecycle("  Assets complete: ${total} total (${downloaded} downloaded, ${skipped} cached)")
+    }
+}
+
+// ============================================================
+// Fabric-specific tasks
+// ============================================================
+if (project.name == 'fabric') {
+    configurations {
+        prodMods {
+            canBeResolved = true
+            canBeConsumed = false
+            transitive = false
+        }
+    }
+
+    dependencies {
+        prodMods "net.fabricmc.fabric-api:fabric-api:${project.ext.fabric_api_version}"
+        prodMods "dev.architectury:architectury-fabric:${project.ext.architectury_api_version}"
+    }
+
+    // --- Task: downloadFabricLoader ---
+    // Downloads Fabric Loader and its dependencies (ASM, Mixin, intermediary)
+    // using the Fabric Meta API profile.
+    tasks.register('downloadFabricLoader') {
+        group = 'miners market prod'
+        description = "Download Fabric Loader and dependencies for ${mcVersion}"
+
+        doLast {
+            logger.lifecycle("=== Fabric Loader ===")
+            def profile = prodGetFabricProfile(mcVersion, project.ext.fabric_loader_version)
+            def fabricLibsDir = file("${prodCacheDir}/fabric-loader-libs")
+
+            profile.libraries.each { lib ->
+                def path = prodMavenCoordToPath(lib.name)
+                def baseUrl = lib.url ?: 'https://libraries.minecraft.net/'
+                // Ensure base URL ends with /
+                if (!baseUrl.endsWith('/')) baseUrl += '/'
+                def dest = file("${fabricLibsDir}/${path}")
+                prodDownloadFile("${baseUrl}${path}", dest)
+            }
+            logger.lifecycle("  ${profile.libraries.size()} Fabric libraries ready")
+        }
+    }
+
+    // --- Task: setupProdMods ---
+    // Copies built mod JAR and dependency mods to the instance mods/ directory.
+    tasks.register('setupProdMods') {
+        group = 'miners market prod'
+        description = "Copy built mod JAR and dependencies to mods/ for Fabric ${mcVersion}"
+        dependsOn 'remapJar'
+
+        doLast {
+            def modsDir = file("${prodBaseDir}/instances/fabric-${mcVersion}/mods")
+            if (modsDir.exists()) modsDir.deleteDir()
+            modsDir.mkdirs()
+
+            // Built mod JAR
+            def modJar = tasks.named('remapJar').get().archiveFile.get().asFile
+            ant.copy(file: modJar, todir: modsDir)
+            logger.lifecycle("  Mod: ${modJar.name}")
+
+            // Dependency mods (Fabric API, Architectury API)
+            configurations.prodMods.files.each { f ->
+                ant.copy(file: f, todir: modsDir)
+                logger.lifecycle("  Dep: ${f.name}")
+            }
+        }
+    }
+
+    // --- Task: runProd ---
+    // Launches Minecraft with built mod in a production-like environment.
+    tasks.register('runProd', JavaExec) {
+        group = 'miners market prod'
+        description = "Launch Minecraft in production-like environment (Fabric ${mcVersion})"
+        dependsOn 'downloadMinecraft', 'downloadFabricLoader', 'setupProdMods'
+
+        doFirst {
+            def versionJson = prodGetVersionJson(mcVersion)
+            def profile = prodGetFabricProfile(mcVersion, project.ext.fabric_loader_version)
+            def instanceDir = file("${prodBaseDir}/instances/fabric-${mcVersion}")
+            instanceDir.mkdirs()
+
+            // Build classpath
+            def cp = []
+
+            // Fabric Loader and its dependencies (ASM, Mixin, intermediary)
+            def fabricLibsDir = file("${prodCacheDir}/fabric-loader-libs")
+            profile.libraries.each { lib ->
+                def path = prodMavenCoordToPath(lib.name)
+                def f = file("${fabricLibsDir}/${path}")
+                if (f.exists()) cp.add(f)
+            }
+
+            // Vanilla client JAR
+            cp.add(file("${prodCacheDir}/client/${mcVersion}.jar"))
+
+            // Vanilla MC libraries (filtered by OS rules)
+            cp.addAll(prodGetLibraryFiles(versionJson))
+
+            cp = prodPatchLwjglForArm64(cp)
+            classpath = files(cp)
+            mainClass.set(profile.mainClass)
+
+            // Game arguments
+            args '--gameDir', instanceDir.absolutePath
+            args '--assetsDir', file("${prodCacheDir}/assets").absolutePath
+            args '--assetIndex', versionJson.assetIndex.id
+            args '--version', mcVersion
+            args '--username', 'Dev'
+            args '--accessToken', '0'
+
+            // JVM arguments
+            jvmArgs '-Xmx2G', '-Xms512M'
+
+            // macOS requires -XstartOnFirstThread for LWJGL/OpenGL
+            if (prodGetMojangOs() == 'osx') {
+                jvmArgs '-XstartOnFirstThread'
+            }
+
+            // Extract native libraries for old MC versions (pre-1.19)
+            def nativesDir = new File(instanceDir, "natives")
+            nativesDir.mkdirs()
+            prodExtractNatives(versionJson, nativesDir)
+            jvmArgs "-Djava.library.path=${nativesDir.absolutePath}"
+
+            workingDir = instanceDir
+
+            logger.lifecycle("=== runProd (Fabric ${mcVersion}) ===")
+            logger.lifecycle("  Game dir: ${instanceDir}")
+            logger.lifecycle("  Classpath entries: ${cp.size()}")
+        }
+    }
+}
+
+// ============================================================
+// NeoForge-specific tasks
+// ============================================================
+if (project.name == 'neoforge') {
+    configurations {
+        prodMods {
+            canBeResolved = true
+            canBeConsumed = false
+            transitive = false
+        }
+    }
+
+    dependencies {
+        prodMods "dev.architectury:architectury-neoforge:${project.ext.architectury_api_version}"
+    }
+
+    def neoforgeVersion = project.ext.neoforge_version
+    def neoforgeInstallDir = file("${prodCacheDir}/neoforge-install-${mcVersion}")
+    def neoforgeVersionId = "neoforge-${neoforgeVersion}"
+
+    // --- Task: installNeoForge ---
+    // Downloads NeoForge installer, places vanilla files, runs --installClient.
+    tasks.register('installNeoForge') {
+        group = 'miners market prod'
+        description = "Install NeoForge ${neoforgeVersion} for ${mcVersion}"
+        dependsOn 'downloadMinecraft'
+
+        doLast {
+            def versionJsonFile = new File(neoforgeInstallDir,
+                "versions/${neoforgeVersionId}/${neoforgeVersionId}.json")
+            if (versionJsonFile.exists()) {
+                logger.lifecycle("  NeoForge already installed: ${neoforgeVersionId}")
+                return
+            }
+
+            logger.lifecycle("=== Installing NeoForge ${neoforgeVersion} ===")
+            neoforgeInstallDir.mkdirs()
+
+            // Download installer
+            def installerJar = file("${prodCacheDir}/installers/neoforge-${neoforgeVersion}-installer.jar")
+            prodDownloadFile(
+                "https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoforgeVersion}/neoforge-${neoforgeVersion}-installer.jar",
+                installerJar
+            )
+
+            // Place vanilla files for the installer
+            def vanillaVersionDir = new File(neoforgeInstallDir, "versions/${mcVersion}")
+            vanillaVersionDir.mkdirs()
+            ant.copy(file: file("${prodCacheDir}/versions/${mcVersion}.json"),
+                      tofile: new File(vanillaVersionDir, "${mcVersion}.json"),
+                      overwrite: false)
+            ant.copy(file: file("${prodCacheDir}/client/${mcVersion}.jar"),
+                      tofile: new File(vanillaVersionDir, "${mcVersion}.jar"),
+                      overwrite: false)
+
+            // Copy vanilla libraries so the installer can find them
+            def vanillaLibsDir = file("${prodCacheDir}/libraries")
+            if (vanillaLibsDir.exists()) {
+                ant.copy(todir: new File(neoforgeInstallDir, "libraries")) {
+                    fileset(dir: vanillaLibsDir)
+                }
+            }
+
+            // Create dummy launcher profile required by the installer
+            def profileFile = new File(neoforgeInstallDir, "launcher_profiles.json")
+            if (!profileFile.exists()) {
+                profileFile.text = '{"profiles":{}}'
+            }
+
+            // Run installer
+            logger.lifecycle("  Running NeoForge installer...")
+            def launcher = javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(project.ext.java_version)
+            }.get()
+            project.exec {
+                commandLine launcher.executablePath.asFile.absolutePath,
+                    '-jar', installerJar.absolutePath,
+                    '--installClient', neoforgeInstallDir.absolutePath
+            }
+
+            if (!versionJsonFile.exists()) {
+                throw new GradleException("NeoForge installer did not create expected version JSON: ${versionJsonFile}")
+            }
+            logger.lifecycle("  NeoForge installed successfully")
+        }
+    }
+
+    // --- Task: setupProdMods ---
+    // Copies built mod JAR and dependency mods to the instance mods/ directory.
+    tasks.register('setupProdMods') {
+        group = 'miners market prod'
+        description = "Copy built mod JAR and dependencies to mods/ for NeoForge ${mcVersion}"
+        dependsOn 'remapJar'
+
+        doLast {
+            def modsDir = file("${prodBaseDir}/instances/neoforge-${mcVersion}/mods")
+            if (modsDir.exists()) modsDir.deleteDir()
+            modsDir.mkdirs()
+
+            // Built mod JAR
+            def modJar = tasks.named('remapJar').get().archiveFile.get().asFile
+            ant.copy(file: modJar, todir: modsDir)
+            logger.lifecycle("  Mod: ${modJar.name}")
+
+            // Dependency mods (Architectury API)
+            configurations.prodMods.files.each { f ->
+                ant.copy(file: f, todir: modsDir)
+                logger.lifecycle("  Dep: ${f.name}")
+            }
+        }
+    }
+
+    // --- Task: runProd ---
+    // Launches Minecraft with built mod in a production-like environment.
+    tasks.register('runProd', JavaExec) {
+        group = 'miners market prod'
+        description = "Launch Minecraft in production-like environment (NeoForge ${mcVersion})"
+        dependsOn 'downloadMinecraft', 'installNeoForge', 'setupProdMods'
+
+        doFirst {
+            def vanillaJson = prodGetVersionJson(mcVersion)
+            def loaderJsonFile = new File(neoforgeInstallDir,
+                "versions/${neoforgeVersionId}/${neoforgeVersionId}.json")
+            def loaderJson = new JsonSlurper().parse(loaderJsonFile)
+            def mergedJson = prodMergeVersionJsons(loaderJson, vanillaJson)
+
+            def instanceDir = file("${prodBaseDir}/instances/neoforge-${mcVersion}")
+            instanceDir.mkdirs()
+            def nativesDir = new File(instanceDir, "natives")
+            nativesDir.mkdirs()
+            prodExtractNatives(vanillaJson, nativesDir)
+            def librariesDir = new File(neoforgeInstallDir, "libraries")
+
+            // Build classpath from installer libraries only.
+            // Do NOT add vanilla client JAR — NeoForge uses its own processed client
+            // module via the -p (module path) JVM arguments from the version JSON.
+            def cp = prodGetInstallerLibraryFiles(mergedJson, neoforgeInstallDir)
+            cp = prodPatchLwjglForArm64(cp)
+            classpath = files(cp)
+
+            mainClass.set(mergedJson.mainClass)
+
+            // Placeholder substitutions for version JSON arguments
+            def placeholders = [
+                '${library_directory}'  : librariesDir.absolutePath,
+                '${classpath_separator}': File.pathSeparator,
+                '${version_name}'       : neoforgeVersionId,
+                '${natives_directory}'  : nativesDir.absolutePath,
+                '${launcher_name}'      : 'GradleProdRun',
+                '${launcher_version}'   : '1.0',
+                '${auth_player_name}'   : 'Dev',
+                '${version_type}'       : 'release',
+                '${game_directory}'     : instanceDir.absolutePath,
+                '${assets_root}'        : file("${prodCacheDir}/assets").absolutePath,
+                '${assets_index_name}'  : vanillaJson.assetIndex.id,
+                '${auth_uuid}'          : '00000000-0000-0000-0000-000000000000',
+                '${auth_access_token}'  : '0',
+                '${clientid}'           : '0',
+                '${auth_xuid}'          : '0',
+                '${user_type}'          : 'legacy',
+                '${user_properties}'    : '{}',
+            ]
+
+            // JVM arguments from version JSON + memory settings
+            jvmArgs '-Xmx2G', '-Xms512M'
+            jvmArgs prodProcessArguments(mergedJson.arguments.jvm, placeholders)
+
+            // Game arguments from version JSON
+            args prodProcessArguments(mergedJson.arguments.game, placeholders)
+
+            workingDir = instanceDir
+
+            logger.lifecycle("=== runProd (NeoForge ${mcVersion}) ===")
+            logger.lifecycle("  Game dir: ${instanceDir}")
+            logger.lifecycle("  Main class: ${mergedJson.mainClass}")
+            logger.lifecycle("  Classpath entries: ${cp.size()}")
+        }
+    }
+}
+
+// ============================================================
+// Forge-specific tasks
+// ============================================================
+if (project.name == 'forge') {
+    configurations {
+        prodMods {
+            canBeResolved = true
+            canBeConsumed = false
+            transitive = false
+        }
+    }
+
+    dependencies {
+        prodMods "dev.architectury:architectury-forge:${project.ext.architectury_api_version}"
+    }
+
+    def forgeVersion = project.ext.forge_version
+    def forgeInstallDir = file("${prodCacheDir}/forge-install-${mcVersion}")
+    def forgeVersionId = "${mcVersion}-forge-${forgeVersion}"
+
+    // --- Task: installForge ---
+    // Downloads Forge installer, places vanilla files, runs --installClient.
+    tasks.register('installForge') {
+        group = 'miners market prod'
+        description = "Install Forge ${forgeVersion} for ${mcVersion}"
+        dependsOn 'downloadMinecraft'
+
+        doLast {
+            def versionJsonFile = new File(forgeInstallDir,
+                "versions/${forgeVersionId}/${forgeVersionId}.json")
+            if (versionJsonFile.exists()) {
+                logger.lifecycle("  Forge already installed: ${forgeVersionId}")
+                return
+            }
+
+            logger.lifecycle("=== Installing Forge ${forgeVersion} ===")
+            forgeInstallDir.mkdirs()
+
+            // Download installer
+            def installerJar = file("${prodCacheDir}/installers/forge-${mcVersion}-${forgeVersion}-installer.jar")
+            prodDownloadFile(
+                "https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVersion}-${forgeVersion}/forge-${mcVersion}-${forgeVersion}-installer.jar",
+                installerJar
+            )
+
+            // Place vanilla files for the installer
+            def vanillaVersionDir = new File(forgeInstallDir, "versions/${mcVersion}")
+            vanillaVersionDir.mkdirs()
+            ant.copy(file: file("${prodCacheDir}/versions/${mcVersion}.json"),
+                      tofile: new File(vanillaVersionDir, "${mcVersion}.json"),
+                      overwrite: false)
+            ant.copy(file: file("${prodCacheDir}/client/${mcVersion}.jar"),
+                      tofile: new File(vanillaVersionDir, "${mcVersion}.jar"),
+                      overwrite: false)
+
+            // Copy vanilla libraries so the installer can find them
+            def vanillaLibsDir = file("${prodCacheDir}/libraries")
+            if (vanillaLibsDir.exists()) {
+                ant.copy(todir: new File(forgeInstallDir, "libraries")) {
+                    fileset(dir: vanillaLibsDir)
+                }
+            }
+
+            // Create dummy launcher profile required by the installer
+            def profileFile = new File(forgeInstallDir, "launcher_profiles.json")
+            if (!profileFile.exists()) {
+                profileFile.text = '{"profiles":{}}'
+            }
+
+            // Run installer
+            logger.lifecycle("  Running Forge installer...")
+            def launcher = javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(project.ext.java_version)
+            }.get()
+            project.exec {
+                commandLine launcher.executablePath.asFile.absolutePath,
+                    '-jar', installerJar.absolutePath,
+                    '--installClient', forgeInstallDir.absolutePath
+            }
+
+            if (!versionJsonFile.exists()) {
+                throw new GradleException("Forge installer did not create expected version JSON: ${versionJsonFile}")
+            }
+            logger.lifecycle("  Forge installed successfully")
+        }
+    }
+
+    // --- Task: setupProdMods ---
+    // Copies built mod JAR and dependency mods to the instance mods/ directory.
+    tasks.register('setupProdMods') {
+        group = 'miners market prod'
+        description = "Copy built mod JAR and dependencies to mods/ for Forge ${mcVersion}"
+        dependsOn 'remapJar'
+
+        doLast {
+            def modsDir = file("${prodBaseDir}/instances/forge-${mcVersion}/mods")
+            if (modsDir.exists()) modsDir.deleteDir()
+            modsDir.mkdirs()
+
+            // Built mod JAR
+            def modJar = tasks.named('remapJar').get().archiveFile.get().asFile
+            ant.copy(file: modJar, todir: modsDir)
+            logger.lifecycle("  Mod: ${modJar.name}")
+
+            // Dependency mods (Architectury API)
+            configurations.prodMods.files.each { f ->
+                ant.copy(file: f, todir: modsDir)
+                logger.lifecycle("  Dep: ${f.name}")
+            }
+        }
+    }
+
+    // --- Task: runProd ---
+    // Launches Minecraft with built mod in a production-like environment.
+    tasks.register('runProd', JavaExec) {
+        group = 'miners market prod'
+        description = "Launch Minecraft in production-like environment (Forge ${mcVersion})"
+        dependsOn 'downloadMinecraft', 'installForge', 'setupProdMods'
+
+        doFirst {
+            def vanillaJson = prodGetVersionJson(mcVersion)
+            def loaderJsonFile = new File(forgeInstallDir,
+                "versions/${forgeVersionId}/${forgeVersionId}.json")
+            def loaderJson = new JsonSlurper().parse(loaderJsonFile)
+            def mergedJson = prodMergeVersionJsons(loaderJson, vanillaJson)
+
+            def instanceDir = file("${prodBaseDir}/instances/forge-${mcVersion}")
+            instanceDir.mkdirs()
+            def nativesDir = new File(instanceDir, "natives")
+            nativesDir.mkdirs()
+            prodExtractNatives(vanillaJson, nativesDir)
+            def librariesDir = new File(forgeInstallDir, "libraries")
+
+            // Build classpath from installer libraries only.
+            // Do NOT add vanilla client JAR — Forge uses its own processed client
+            // module via the -p (module path) JVM arguments from the version JSON.
+            def cp = prodGetInstallerLibraryFiles(mergedJson, forgeInstallDir)
+            cp = prodPatchLwjglForArm64(cp)
+            classpath = files(cp)
+
+            mainClass.set(mergedJson.mainClass)
+
+            // Placeholder substitutions for version JSON arguments
+            def placeholders = [
+                '${library_directory}'  : librariesDir.absolutePath,
+                '${classpath_separator}': File.pathSeparator,
+                '${version_name}'       : forgeVersionId,
+                '${natives_directory}'  : nativesDir.absolutePath,
+                '${launcher_name}'      : 'GradleProdRun',
+                '${launcher_version}'   : '1.0',
+                '${auth_player_name}'   : 'Dev',
+                '${version_type}'       : 'release',
+                '${game_directory}'     : instanceDir.absolutePath,
+                '${assets_root}'        : file("${prodCacheDir}/assets").absolutePath,
+                '${assets_index_name}'  : vanillaJson.assetIndex.id,
+                '${auth_uuid}'          : '00000000-0000-0000-0000-000000000000',
+                '${auth_access_token}'  : '0',
+                '${clientid}'           : '0',
+                '${auth_xuid}'          : '0',
+                '${user_type}'          : 'legacy',
+                '${user_properties}'    : '{}',
+            ]
+
+            // JVM arguments from version JSON + memory settings
+            jvmArgs '-Xmx2G', '-Xms512M'
+            jvmArgs prodProcessArguments(mergedJson.arguments.jvm, placeholders)
+
+            // Game arguments from version JSON
+            args prodProcessArguments(mergedJson.arguments.game, placeholders)
+
+            workingDir = instanceDir
+
+            logger.lifecycle("=== runProd (Forge ${mcVersion}) ===")
+            logger.lifecycle("  Game dir: ${instanceDir}")
+            logger.lifecycle("  Main class: ${mergedJson.mainClass}")
+            logger.lifecycle("  Classpath entries: ${cp.size()}")
+        }
+    }
+}
