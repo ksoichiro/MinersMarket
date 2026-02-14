@@ -35,12 +35,20 @@ Sell your mined items to the merchant for gold:
 | Emerald | 10 | Amethyst Shard | 10 |
 | Netherite Ingot | 100 | | |
 
+### 📈 Price Events
+- **Dynamic Pricing**: Every 10 minutes, a random price event occurs — ore prices go up or down!
+- **Timed Events**: Each event lasts 3–5 minutes, keeping the game exciting
+- **HUD Indicator**: Active price events are shown on your HUD with the current multiplier
+- **Title Announcements**: Price changes are announced with on-screen titles so you never miss them
+- **Strategy Element**: Decide whether to sell now or wait for better prices
+
 ### 📊 Real-Time HUD
 - **Earnings Display**: Track your current gold with a coin icon
 - **Play Time**: See your elapsed time in MM:SS format
 - **Rankings**: View finished players and their times
 - **Floating Notifications**: Sale amounts pop up when you sell items
 - **Market Direction Marker**: Always know which way to the market
+- **Price Event Status**: See when a price event is active and the current price multiplier
 
 ### 🎮 Game Flow
 - **Game Start Block**: Press to begin a 5-second countdown, then the race starts
@@ -66,18 +74,48 @@ Sell your mined items to the merchant for gold:
 
 ### Multi-Loader Support
 This mod is built with **Architectury** and supports **multiple mod loaders**!
-- **1.21.1**: Fabric and NeoForge
+- **1.21.1–1.21.9**: Fabric and NeoForge
+- **1.20.1**: Fabric and Forge
 - Download the correct version for your mod loader
 - Shared codebase ensures consistent experience across loaders
 
 ### Requirements
 
+#### Minecraft 1.21.9
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.134.1+1.21.9, OR NeoForge 21.9.16-beta+
+- **Dependencies**: Architectury API 18.0.3+
+
+#### Minecraft 1.21.8
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.136.0+1.21.8, OR NeoForge 21.8.52+
+- **Dependencies**: Architectury API 17.0.8+
+
+#### Minecraft 1.21.7
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.129.0+1.21.7, OR NeoForge 21.7.25-beta+
+- **Dependencies**: Architectury API 17.0.8+
+
+#### Minecraft 1.21.6
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.128.2+1.21.6, OR NeoForge 21.6.20-beta+
+- **Dependencies**: Architectury API 17.0.6+
+
+#### Minecraft 1.21.5
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.126.0+1.21.5, OR NeoForge 21.5.96+
+- **Dependencies**: Architectury API 16.1.4+
+
+#### Minecraft 1.21.4
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.119.3+1.21.4, OR NeoForge 21.4.156+
+- **Dependencies**: Architectury API 15.0.3+
+
+#### Minecraft 1.21.3
+- **Mod Loader**: Fabric Loader 0.16.10+ with Fabric API 0.107.3+1.21.3, OR NeoForge 21.3.95+
+- **Dependencies**: Architectury API 14.0.4+
+
 #### Minecraft 1.21.1
-- **Mod Loader**:
-  - Fabric Loader 0.17.3+ with Fabric API 0.116.7+1.21.1, OR
-  - NeoForge 21.1.209+
-- **Dependencies**:
-  - Architectury API 13.0.8+
+- **Mod Loader**: Fabric Loader 0.17.3+ with Fabric API 0.116.7+1.21.1, OR NeoForge 21.1.209+
+- **Dependencies**: Architectury API 13.0.8+
+
+#### Minecraft 1.20.1
+- **Mod Loader**: Fabric Loader 0.16.10+ with Fabric API 0.92.2+1.20.1, OR Forge 47.3.0+
+- **Dependencies**: Architectury API 9.2.14+
 
 ### Compatibility
 - Works alongside other mods
@@ -129,6 +167,6 @@ Check out the **Gallery** above for screenshots showcasing:
 
 ---
 
-**Developed for Minecraft Java Edition 1.21.1**
+**Developed for Minecraft Java Edition 1.20.1–1.21.9**
 
 Race to riches! ⛏️

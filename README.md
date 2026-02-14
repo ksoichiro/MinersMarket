@@ -12,13 +12,28 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 - **NPC Merchant**: Sell your mined ores and ingots to a merchant NPC at the market
 - **Auto-Generated Market**: A market structure spawns automatically at the world spawn point
 - **Miner's Pickaxe**: A powerful custom pickaxe with Fortune III, high durability (4096), and fast mining speed
-- **Real-Time HUD**: Track your earnings, play time, rankings, and market direction on screen
+- **Price Events**: Dynamic price fluctuations occur every 10 minutes, lasting 3–5 minutes — sell at the right time for maximum profit!
+- **Real-Time HUD**: Track your earnings, play time, rankings, price events, and market direction on screen
 - **Multiplayer Support**: Designed for competitive multiplayer sessions with rankings and finish notifications
 
 ## Supported Versions
 
 | Minecraft | Mod Loader | Dependencies |
 |-----------|-----------|--------------|
+| 1.21.9 | Fabric Loader 0.18.4+ with Fabric API 0.134.1+1.21.9 | Architectury API 18.0.3+ |
+| 1.21.9 | NeoForge 21.9.16-beta+ | Architectury API 18.0.3+ |
+| 1.21.8 | Fabric Loader 0.18.4+ with Fabric API 0.136.0+1.21.8 | Architectury API 17.0.8+ |
+| 1.21.8 | NeoForge 21.8.52+ | Architectury API 17.0.8+ |
+| 1.21.7 | Fabric Loader 0.18.4+ with Fabric API 0.129.0+1.21.7 | Architectury API 17.0.8+ |
+| 1.21.7 | NeoForge 21.7.25-beta+ | Architectury API 17.0.8+ |
+| 1.21.6 | Fabric Loader 0.18.4+ with Fabric API 0.128.2+1.21.6 | Architectury API 17.0.6+ |
+| 1.21.6 | NeoForge 21.6.20-beta+ | Architectury API 17.0.6+ |
+| 1.21.5 | Fabric Loader 0.18.4+ with Fabric API 0.126.0+1.21.5 | Architectury API 16.1.4+ |
+| 1.21.5 | NeoForge 21.5.96+ | Architectury API 16.1.4+ |
+| 1.21.4 | Fabric Loader 0.18.4+ with Fabric API 0.119.3+1.21.4 | Architectury API 15.0.3+ |
+| 1.21.4 | NeoForge 21.4.156+ | Architectury API 15.0.3+ |
+| 1.21.3 | Fabric Loader 0.16.10+ with Fabric API 0.107.3+1.21.3 | Architectury API 14.0.4+ |
+| 1.21.3 | NeoForge 21.3.95+ | Architectury API 14.0.4+ |
 | 1.21.1 | Fabric Loader 0.17.3+ with Fabric API 0.116.7+1.21.1 | Architectury API 13.0.8+ |
 | 1.21.1 | NeoForge 21.1.209+ | Architectury API 13.0.8+ |
 | 1.20.1 | Fabric Loader 0.16.10+ with Fabric API 0.92.2+1.20.1 | Architectury API 9.2.14+ |
@@ -27,15 +42,15 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Requirements
 
 ### For Players
-- **Minecraft**: Java Edition 1.21.1 or 1.20.1
+- **Minecraft**: Java Edition 1.20.1–1.21.9
 - **Mod Loader** (choose one):
-  - **1.21.1**: Fabric Loader 0.17.3+ with Fabric API, or NeoForge 21.1.209+
-  - **1.20.1**: Fabric Loader 0.16.10+ with Fabric API, or Forge 47.3.0+
+  - **1.21.1–1.21.9**: Fabric with Fabric API, or NeoForge
+  - **1.20.1**: Fabric with Fabric API, or Forge
 - **Dependencies**:
-  - Architectury API (13.0.8+ for 1.21.1, 9.2.14+ for 1.20.1)
+  - Architectury API (see Supported Versions table for version requirements)
 
 ### For Developers
-- **Java Development Kit (JDK)**: 21 for 1.21.1, 17 for 1.20.1 (auto-downloaded by toolchain)
+- **Java Development Kit (JDK)**: 21 for 1.21.1+, 17 for 1.20.1 (auto-downloaded by toolchain)
 - **IDE**: IntelliJ IDEA (recommended) or Eclipse
 
 ## Building from Source
@@ -55,11 +70,10 @@ cd MinersMarket
 ./gradlew release
 ```
 
-**Output Files**:
-- `fabric-1.21.1/build/libs/minersmarket-*-fabric.jar` - Fabric JAR for 1.21.1
-- `neoforge-1.21.1/build/libs/minersmarket-*-neoforge.jar` - NeoForge JAR for 1.21.1
-- `fabric-1.20.1/build/libs/minersmarket-*-fabric.jar` - Fabric JAR for 1.20.1
-- `forge-1.20.1/build/libs/minersmarket-*-forge.jar` - Forge JAR for 1.20.1
+**Output Files** (examples):
+- `fabric-<version>/build/libs/minersmarket-*-fabric.jar` - Fabric JAR
+- `neoforge-<version>/build/libs/minersmarket-*-neoforge.jar` - NeoForge JAR (1.21.1+)
+- `forge-1.20.1/build/libs/minersmarket-*-forge.jar` - Forge JAR (1.20.1)
 
 ## Development Setup
 
@@ -86,51 +100,25 @@ cd MinersMarket
 
 ## Installation
 
-### Fabric (1.21.1)
-1. Install Minecraft 1.21.1
-2. Install Fabric Loader 0.17.3+
-3. Download and install Fabric API 0.116.7+1.21.1
-4. Download and install Architectury API 13.0.8+
-5. Copy the Fabric JAR to `.minecraft/mods/` folder
-6. Launch Minecraft with Fabric profile
-
-### NeoForge (1.21.1)
-1. Install Minecraft 1.21.1
-2. Install NeoForge 21.1.209+
-3. Download and install Architectury API 13.0.8+
-4. Copy the NeoForge JAR to `.minecraft/mods/` folder
-5. Launch Minecraft with NeoForge profile
-
-### Fabric (1.20.1)
-1. Install Minecraft 1.20.1
-2. Install Fabric Loader 0.16.10+
-3. Download and install Fabric API 0.92.2+1.20.1
-4. Download and install Architectury API 9.2.14+
-5. Copy the Fabric JAR to `.minecraft/mods/` folder
-6. Launch Minecraft with Fabric profile
-
-### Forge (1.20.1)
-1. Install Minecraft 1.20.1
-2. Install Forge 47.3.0+
-3. Download and install Architectury API 9.2.14+
-4. Copy the Forge JAR to `.minecraft/mods/` folder
-5. Launch Minecraft with Forge profile
+1. Install the desired Minecraft version
+2. Install a supported mod loader (see [Supported Versions](#supported-versions) for details)
+3. Download and install the required Fabric API (Fabric only) and Architectury API
+4. Copy the corresponding Miner's Market JAR to `.minecraft/mods/` folder
+5. Launch Minecraft with the mod loader profile
 
 ## Project Structure
 
 ```
 MinersMarket/
 ├── common-shared/           # Shared version-agnostic sources (included via srcDir)
-├── common-1.21.1/           # Common module for MC 1.21.1 (version-specific APIs)
-├── common-1.20.1/           # Common module for MC 1.20.1 (version-specific APIs)
+├── common-<version>/        # Common module per MC version (version-specific APIs)
 ├── fabric-base/             # Shared Fabric sources
-├── fabric-1.21.1/           # Fabric subproject for MC 1.21.1
-├── fabric-1.20.1/           # Fabric subproject for MC 1.20.1
+├── fabric-<version>/        # Fabric subproject per MC version
 ├── neoforge-base/           # Shared NeoForge sources
-├── neoforge-1.21.1/         # NeoForge subproject for MC 1.21.1
+├── neoforge-<version>/      # NeoForge subproject per MC version (1.21.1+)
 ├── forge-base/              # Shared Forge sources
 ├── forge-1.20.1/            # Forge subproject for MC 1.20.1
-├── props/                   # Version-specific properties (1.20.1, 1.21.1)
+├── props/                   # Version-specific properties
 ├── build.gradle             # Root build configuration (Groovy DSL)
 ├── settings.gradle          # Multi-module settings
 └── gradle.properties        # Version configuration
@@ -162,4 +150,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**Developed for Minecraft Java Edition 1.21.1 / 1.20.1**
+**Developed for Minecraft Java Edition 1.20.1–1.21.9**
