@@ -18,5 +18,9 @@
   "message.minersmarket.winner_subtitle": "%s wins!",
   "message.minersmarket.goal_reached_title": "Goal Reached!",
   "message.minersmarket.goal_reached_subtitle": "%s reached the goal!",
-  "hud.minersmarket.market_marker": "Market"
+  "hud.minersmarket.market_marker": "Market",
+  "message.minersmarket.price_event_start": "Price Fluctuation!",
+  "message.minersmarket.price_event_start_subtitle": "Prices are changing for %1$d minutes!",
+  "message.minersmarket.price_event_end": "Prices have returned to normal.",
+  "hud.minersmarket.price_event": "Price Event"
 }

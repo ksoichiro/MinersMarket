@@ -110,7 +110,7 @@ public class MerchantEntity extends Mob {
             return InteractionResult.CONSUME;
         }
 
-        int pricePerItem = PriceList.getPrice(heldItem.getItem());
+        int pricePerItem = manager.getEffectivePrice(heldItem.getItem());
         int sellCount = heldItem.getCount();
         long totalEarned = (long) pricePerItem * sellCount;
 

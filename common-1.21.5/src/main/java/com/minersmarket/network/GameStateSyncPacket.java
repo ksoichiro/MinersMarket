@@ -30,8 +30,19 @@ public class GameStateSyncPacket {
                 int finishTime = buf.readInt();
                 finishedEntries.add(new ClientGameState.FinishedEntry(name, finishTime));
             }
+            boolean hasEvent = buf.readBoolean();
+            int eventRemainingTicks = 0;
+            float multiplier = 1.0f;
+            if (hasEvent) {
+                eventRemainingTicks = buf.readInt();
+                multiplier = buf.readFloat();
+            }
+            final boolean eventActive = hasEvent;
+            final int remainingTicks = eventRemainingTicks;
+            final float eventMultiplier = multiplier;
             context.queue(() -> {
-                ClientGameState.update(GameState.values()[stateOrdinal], salesAmount, playTime, finishedEntries);
+                ClientGameState.update(GameState.values()[stateOrdinal], salesAmount, playTime,
+                        finishedEntries, eventActive, remainingTicks, eventMultiplier);
             });
         });
     }
@@ -46,6 +57,12 @@ public class GameStateSyncPacket {
         for (FinishedPlayer fp : finished) {
             buf.writeUtf(fp.playerName());
             buf.writeInt(fp.finishTimeTicks());
+        }
+        boolean hasEvent = manager.isPriceEventActive();
+        buf.writeBoolean(hasEvent);
+        if (hasEvent) {
+            buf.writeInt(manager.getPriceEventRemainingTicks());
+            buf.writeFloat(manager.getPriceMultiplier());
         }
         NetworkManager.sendToPlayer(player, ID, buf);
     }

@@ -190,21 +190,24 @@ Implement initial equipment and permanent effects.
   - Reapply on respawn
   - Use player tick event or respawn event
 
-### Phase 11: Price Fluctuation Events (Post-MVP)
+### Phase 11: Price Fluctuation Events
 
-Optional feature - implement after core functionality is stable.
-
-- [ ] 11-1. Create `PriceEventManager`
-  - Timer: trigger event every 20 minutes (24,000 ticks)
-  - Random price change: +/- 10-30% for each item
+- [x] 11-1. Add price event logic to `GameStateManager`
+  - Timer: trigger event every 10 minutes (12,000 ticks)
+  - Random price change: +/- 10-30% (multiplier 0.7-1.3) for each item
   - Event duration: 5 minutes (6,000 ticks)
-- [ ] 11-2. Broadcast event start/end messages to all players
-- [ ] 11-3. Sync current prices to clients for HUD/UI updates
-- [ ] 11-4. Restore original prices when event ends
+  - `getEffectivePrice()` method applies multiplier to base price
+- [x] 11-2. Broadcast event start/end messages to all players
+  - Title with subtitle on event start
+  - System message on event end
+- [x] 11-3. Sync current prices to clients via `GameStateSyncPacket`
+  - Extended packet includes event active flag, remaining ticks, per-item multipliers
+- [x] 11-4. Display price event on HUD (`GameHudOverlay`)
+  - Header with remaining time, item list with effective prices and up/down arrows
 
 ## MVP Scope
 
-The MVP includes Phases 1-10. Phase 11 (Price Fluctuation Events) is deferred to post-MVP.
+The MVP includes Phases 1-10. Phase 11 (Price Fluctuation Events) has been implemented.
 
 Within MVP, the following simplifications apply:
 - Selling UI uses Option B (item-use on merchant) instead of a full trading GUI

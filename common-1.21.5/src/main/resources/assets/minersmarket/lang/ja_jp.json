@@ -18,5 +18,9 @@
   "message.minersmarket.winner_subtitle": "%s の勝利！",
   "message.minersmarket.goal_reached_title": "目標達成！",
   "message.minersmarket.goal_reached_subtitle": "%s が目標達成！",
-  "hud.minersmarket.market_marker": "マーケット"
+  "hud.minersmarket.market_marker": "マーケット",
+  "message.minersmarket.price_event_start": "価格変動！",
+  "message.minersmarket.price_event_start_subtitle": "%1$d分間、価格が変動します！",
+  "message.minersmarket.price_event_end": "価格が元に戻りました。",
+  "hud.minersmarket.price_event": "価格変動中"
 }

@@ -88,8 +88,8 @@ public class GameHudOverlay {
 
         // Ranking display (finished players)
         var finishedPlayers = ClientGameState.getFinishedPlayers();
+        int nextY = y + 26;
         if (!finishedPlayers.isEmpty()) {
-            int rankY = y + 26;
             for (int i = 0; i < finishedPlayers.size(); i++) {
                 var entry = finishedPlayers.get(i);
                 int ft = entry.finishTimeTicks() / 20;
@@ -97,13 +97,32 @@ public class GameHudOverlay {
                         i + 1, entry.playerName(), ft / 60, ft % 60);
                 int rankWidth = mc.font.width(rankText);
                 int color = (i == 0) ? 0xFFD700 : 0xCCCCCC;
-                graphics.drawString(mc.font, rankText, screenWidth - rankWidth - MARGIN, rankY, color, true);
-                rankY += 11;
+                graphics.drawString(mc.font, rankText, screenWidth - rankWidth - MARGIN, nextY, color, true);
+                nextY += 11;
             }
+        }
+
+        // Price event display
+        if (ClientGameState.isPriceEventActive()) {
+            renderPriceEvent(graphics, mc, screenWidth, nextY);
         }
 
         // Market direction marker
         MarketMarkerRenderer.render(graphics, mc, screenWidth, screenHeight);
+    }
+
+    private static void renderPriceEvent(GuiGraphics graphics, Minecraft mc,
+                                           int screenWidth, int startY) {
+        int remainingTicks = ClientGameState.getPriceEventRemainingTicks();
+        int secs = remainingTicks / 20;
+        float multiplier = ClientGameState.getPriceMultiplier();
+        int percent = Math.round(Math.abs(multiplier - 1.0f) * 100);
+        String arrow = multiplier >= 1.0f ? "\u2191" : "\u2193";
+        int color = multiplier >= 1.0f ? 0x55FF55 : 0xFF5555;
+        String header = Component.translatable("hud.minersmarket.price_event").getString()
+                + " " + arrow + percent + "% " + String.format("%d:%02d", secs / 60, secs % 60);
+        int headerWidth = mc.font.width(header);
+        graphics.drawString(mc.font, header, screenWidth - headerWidth - MARGIN, startY, color, true);
     }
 
     private static void renderFloatingTexts(GuiGraphics graphics, Minecraft mc,

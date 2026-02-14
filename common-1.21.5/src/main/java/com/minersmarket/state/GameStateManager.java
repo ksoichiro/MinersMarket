@@ -1,5 +1,6 @@
 package com.minersmarket.state;
 
+import com.minersmarket.trade.PriceList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
@@ -8,10 +9,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -24,11 +27,18 @@ public class GameStateManager {
 
     private static final int COUNTDOWN_SECONDS = 5;
     private static final int TICKS_PER_SECOND = 20;
+    private static final int PRICE_EVENT_INTERVAL = 12000;  // 10 minutes
+    private static final int PRICE_EVENT_DURATION_MIN_MINUTES = 3;
+    private static final int PRICE_EVENT_DURATION_MAX_MINUTES = 5;
 
     private static GameStateManager instance;
     private final GameStateSavedData savedData;
     private ServerLevel serverLevel;
     private int countdownTicks = -1;
+    private int priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+    private int priceEventDurationTicks = 0;
+    private float priceMultiplier = 1.0f;
+    private final Random random = new Random();
 
     private GameStateManager(GameStateSavedData savedData) {
         this.savedData = savedData;
@@ -69,6 +79,9 @@ public class GameStateManager {
 
     private void start() {
         savedData.state = GameState.IN_PROGRESS;
+        priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+        priceEventDurationTicks = 0;
+        priceMultiplier = 1.0f;
         savedData.setDirty();
     }
 
@@ -83,6 +96,9 @@ public class GameStateManager {
         savedData.salesAmounts.clear();
         savedData.finishedPlayers.clear();
         countdownTicks = -1;
+        priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+        priceEventDurationTicks = 0;
+        priceMultiplier = 1.0f;
         savedData.setDirty();
     }
 
@@ -114,6 +130,7 @@ public class GameStateManager {
         }
         if (savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED) {
             savedData.playTime++;
+            tickPriceEvent();
             savedData.setDirty();
         }
     }
@@ -132,11 +149,79 @@ public class GameStateManager {
         countdownTicks--;
     }
 
+    private void tickPriceEvent() {
+        if (priceEventDurationTicks > 0) {
+            priceEventDurationTicks--;
+            if (priceEventDurationTicks == 0) {
+                priceMultiplier = 1.0f;
+                priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+                broadcastMessage(Component.translatable("message.minersmarket.price_event_end"));
+            }
+        } else {
+            priceEventCooldownTicks--;
+            if (priceEventCooldownTicks <= 0) {
+                startPriceEvent();
+            }
+        }
+    }
+
+    public void startPriceEvent() {
+        // Randomly choose up or down, then 10-30% change
+        boolean up = random.nextBoolean();
+        float percentage = 0.1f + random.nextFloat() * 0.2f;
+        priceMultiplier = up ? 1.0f + percentage : 1.0f - percentage;
+        int durationMinutes = PRICE_EVENT_DURATION_MIN_MINUTES
+                + random.nextInt(PRICE_EVENT_DURATION_MAX_MINUTES - PRICE_EVENT_DURATION_MIN_MINUTES + 1);
+        priceEventDurationTicks = durationMinutes * 60 * 20;
+        broadcastTitleWithSubtitle(
+                Component.translatable("message.minersmarket.price_event_start"),
+                Component.translatable("message.minersmarket.price_event_start_subtitle", durationMinutes),
+                10, 60, 20
+        );
+    }
+
+    public int getEffectivePrice(Item item) {
+        int basePrice = PriceList.getPrice(item);
+        if (priceMultiplier == 1.0f) {
+            return basePrice;
+        }
+        return Math.max(1, (int) Math.ceil(basePrice * priceMultiplier));
+    }
+
+    public float getPriceMultiplier() {
+        return priceMultiplier;
+    }
+
+    public boolean isPriceEventActive() {
+        return priceEventDurationTicks > 0;
+    }
+
+    public int getPriceEventRemainingTicks() {
+        return priceEventDurationTicks;
+    }
+
     private void broadcastTitle(Component title, int fadeIn, int stay, int fadeOut) {
         if (serverLevel == null || serverLevel.getServer() == null) return;
         for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
             player.connection.send(new ClientboundSetTitleTextPacket(title));
+        }
+    }
+
+    private void broadcastTitleWithSubtitle(Component title, Component subtitle,
+                                              int fadeIn, int stay, int fadeOut) {
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
+            player.connection.send(new ClientboundSetTitleTextPacket(title));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
+        }
+    }
+
+    private void broadcastMessage(Component message) {
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            player.sendSystemMessage(message);
         }
     }
 

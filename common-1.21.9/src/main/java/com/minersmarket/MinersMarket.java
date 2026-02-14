@@ -15,9 +15,12 @@ import com.minersmarket.state.GameStateManager;
 import com.minersmarket.structure.MarketGenerator;
 import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientPlayerEvent;
+import dev.architectury.event.events.common.CommandRegistrationEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import dev.architectury.registry.client.level.entity.EntityModelLayerRegistry;
 import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import net.minecraft.core.BlockPos;
@@ -52,6 +55,21 @@ public class MinersMarket {
         TickEvent.SERVER_PRE.register(GameTickHandler::onServerTick);
         PlayerEvent.PLAYER_RESPAWN.register(PlayerSpawnHandler::onPlayerRespawn);
         PlayerEvent.PLAYER_JOIN.register(PlayerSpawnHandler::onPlayerJoin);
+        CommandRegistrationEvent.EVENT.register((dispatcher, registry, selection) -> {
+            dispatcher.register(Commands.literal("minersmarket")
+                    .requires(source -> source.hasPermission(2))
+                    .then(Commands.literal("priceevent")
+                            .executes(context -> {
+                                GameStateManager manager = GameStateManager.getInstance();
+                                if (manager == null) {
+                                    context.getSource().sendFailure(Component.literal("Game not initialized"));
+                                    return 0;
+                                }
+                                manager.startPriceEvent();
+                                context.getSource().sendSuccess(() -> Component.literal("Price event triggered"), true);
+                                return 1;
+                            })));
+        });
 
         LOGGER.info("Miner's Market initialized");
     }
