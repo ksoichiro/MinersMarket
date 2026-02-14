@@ -27,6 +27,7 @@ logs/
 # Java
 *.class
 hs_err_pid*
+*.jar.log
 
 # Architectury
 .architectury-transformer/
