@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Miner's Market",
+    "min_format": ${pack_format_min},
+    "max_format": ${pack_format_max}
+  }
+}
