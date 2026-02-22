@@ -1,6 +1,7 @@
 package com.minersmarket.state;
 
 import com.minersmarket.trade.PriceList;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -144,9 +145,11 @@ public class GameStateManager {
             broadcastTitle(Component.literal(String.valueOf(secondsLeft)), 0, 25, 0);
         } else if (countdownTicks == 0) {
             broadcastTitle(
-                    Component.translatable("message.minersmarket.game_started"),
+                    Component.translatable("message.minersmarket.game_started")
+                            .withStyle(style -> style.withColor(ChatFormatting.GOLD).withBold(true)),
                     0, 40, 10
             );
+            broadcastSound(SoundEvents.ANVIL_PLACE);
             start();
         }
         countdownTicks--;
@@ -201,6 +204,13 @@ public class GameStateManager {
 
     public int getPriceEventRemainingTicks() {
         return priceEventDurationTicks;
+    }
+
+    private void broadcastSound(SoundEvent sound) {
+        if (serverLevel == null || serverLevel.getServer() == null) return;
+        for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+            playNotifySound(player, sound, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
     }
 
     private void broadcastTitle(Component title, int fadeIn, int stay, int fadeOut) {
