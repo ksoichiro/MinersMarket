@@ -22,7 +22,8 @@ if (!settings.hasProperty('target_mc_version')) {
 def targetMcVersion = settings.target_mc_version
 
 include "common-${targetMcVersion}"
-logger.lifecycle("Common module: common-${targetMcVersion}")
+project(":common-${targetMcVersion}").projectDir = file("common/${targetMcVersion}")
+logger.lifecycle("Common module: common/${targetMcVersion}")
 
 // Load enabled_platforms from props file
 def propsFile = file("props/${targetMcVersion}.properties")
@@ -37,6 +38,6 @@ def enabledPlatforms = props.getProperty('enabled_platforms', '').split(',')
 enabledPlatforms.each { platform ->
     platform = platform.trim()
     include platform
-    project(":${platform}").projectDir = file("${platform}-${targetMcVersion}")
-    logger.lifecycle("${platform.capitalize()} module: ${platform}-${targetMcVersion}")
+    project(":${platform}").projectDir = file("${platform}/${targetMcVersion}")
+    logger.lifecycle("${platform.capitalize()} module: ${platform}/${targetMcVersion}")
 }

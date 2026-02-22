@@ -162,7 +162,7 @@ tasks.register('collectJars') {
             def platforms = props.getProperty('enabled_platforms', '').split(',').collect { it.trim() }
 
             platforms.each { platform ->
-                def libsDir = file("${rootDir}/${platform}-${version}/build/libs")
+                def libsDir = file("${rootDir}/${platform}/${version}/build/libs")
                 if (!libsDir.exists()) {
                     logger.warn("SKIP: ${libsDir} does not exist (not built yet?)")
                     return
