@@ -1,20 +1,14 @@
 package com.minersmarket.registry;
 
-import com.minersmarket.MinersMarket;
 import com.minersmarket.item.MinersPickaxeItem;
-import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.RegistrySupplier;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
 
+import java.util.function.Supplier;
+
 public class ModItems {
-    public static final DeferredRegister<Item> ITEMS =
-            DeferredRegister.create(MinersMarket.MOD_ID, Registries.ITEM);
+    public static Supplier<Item> MINERS_PICKAXE;
 
-    public static final RegistrySupplier<Item> MINERS_PICKAXE = ITEMS.register("minerspickaxe",
-            () -> new MinersPickaxeItem(new Item.Properties()));
-
-    public static void register() {
-        ITEMS.register();
+    public static Item createMinersPickaxe() {
+        return new MinersPickaxeItem(new Item.Properties());
     }
 }

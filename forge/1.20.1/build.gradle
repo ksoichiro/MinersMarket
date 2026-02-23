@@ -52,8 +52,6 @@ loom {
 
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.ext.minecraft_version}-${rootProject.ext.forge_version}"
-    modApi "dev.architectury:architectury-forge:${rootProject.ext.architectury_api_version}"
-
     common(project(path: commonModule, configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: commonModule, configuration: "transformProductionForge")) { transitive false }
 }

@@ -56,7 +56,6 @@ subprojects {
     if (rootProject.ext.has('pack_format_max')) {
         ext.pack_format_max = rootProject.ext.pack_format_max
     }
-    ext.architectury_api_version = rootProject.ext.architectury_api_version
     ext.fabric_loader_version = rootProject.ext.fabric_loader_version
     ext.fabric_api_version = rootProject.ext.fabric_api_version
     ext.enabled_platforms = rootProject.ext.enabled_platforms

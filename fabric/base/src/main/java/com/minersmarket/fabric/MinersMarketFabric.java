@@ -6,6 +6,9 @@ import net.fabricmc.api.ModInitializer;
 public class MinersMarketFabric implements ModInitializer {
     @Override
     public void onInitialize() {
+        FabricPlatform.registerAll();
+        FabricPlatform.registerNetworking();
+        FabricPlatform.registerEvents();
         MinersMarket.init();
     }
 }

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miner's Market is a Minecraft mod where players compete to earn 10,000 gold by mining and selling ores to an NPC merchant. Built with **Architectury** for cross-platform support (Fabric + NeoForge/Forge), targeting Minecraft 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, 1.21.1 (Java 21) and 1.20.1 (Java 17).
+Miner's Market is a Minecraft mod where players compete to earn 10,000 gold by mining and selling ores to an NPC merchant. Built with **Architectury Loom** (build tool only, no runtime API dependency) for cross-platform support (Fabric + NeoForge/Forge), targeting Minecraft 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, 1.21.1 (Java 21) and 1.20.1 (Java 17).
 
 ## Build Commands
 
@@ -36,10 +36,10 @@ Note: Tests are excluded from builds (`-x test`). The build system auto-download
 
 ### Multi-Platform Module Structure
 
-The project uses Architectury's pattern to share code between Fabric and NeoForge/Forge:
+The project uses Architectury Loom's pattern to share code between Fabric and NeoForge/Forge (no Architectury API runtime dependency):
 
 - **`common/shared/`** — Platform-independent shared code (no build.gradle, included as srcDir by common module). Base package: `com.minersmarket`
-- **`common/1.21.1/`** — Version-specific common module for MC 1.21.1 (Architectury common). Includes `common/shared` sources via `srcDir`.
+- **`common/1.21.1/`** — Version-specific common module for MC 1.21.1. Includes `common/shared` sources via `srcDir`.
 - **`common/1.21.11/`** — Version-specific common module for MC 1.21.11. Contains all sources (does NOT include `common/shared` via srcDir due to 1.21.2+ breaking API changes). Uses `Identifier` instead of `ResourceLocation` (1.21.11 rename).
 - **`common/1.21.10/`** — Version-specific common module for MC 1.21.10. Contains all sources (does NOT include `common/shared` via srcDir due to 1.21.2+ breaking API changes).
 - **`common/1.21.9/`** — Version-specific common module for MC 1.21.9. Contains all sources (does NOT include `common/shared` via srcDir due to 1.21.2+ breaking API changes).
@@ -112,17 +112,17 @@ Gradle project names differ from directory names. `settings.gradle` dynamically 
 
 ### Key Dependencies
 
-**1.21.11**: Architectury API 19.0.1, Fabric Loader 0.18.4 / Fabric API 0.141.3+1.21.11, NeoForge 21.11.38-beta
-**1.21.10**: Architectury API 18.0.8, Fabric Loader 0.18.4 / Fabric API 0.138.4+1.21.10, NeoForge 21.10.64
-**1.21.9**: Architectury API 18.0.3, Fabric Loader 0.18.4 / Fabric API 0.134.1+1.21.9, NeoForge 21.9.16-beta
-**1.21.8**: Architectury API 17.0.8, Fabric Loader 0.18.4 / Fabric API 0.136.0+1.21.8, NeoForge 21.8.52
-**1.21.7**: Architectury API 17.0.8, Fabric Loader 0.18.4 / Fabric API 0.129.0+1.21.7, NeoForge 21.7.25-beta
-**1.21.6**: Architectury API 17.0.6, Fabric Loader 0.18.4 / Fabric API 0.128.2+1.21.6, NeoForge 21.6.20-beta
-**1.21.5**: Architectury API 16.1.4, Fabric Loader 0.18.4 / Fabric API 0.126.0+1.21.5, NeoForge 21.5.96
-**1.21.4**: Architectury API 15.0.3, Fabric Loader 0.18.4 / Fabric API 0.119.3+1.21.4, NeoForge 21.4.156
-**1.21.3**: Architectury API 14.0.4, Fabric Loader 0.16.10 / Fabric API 0.107.3+1.21.3, NeoForge 21.3.95
-**1.21.1**: Architectury API 13.0.8, Fabric Loader 0.17.3 / Fabric API 0.116.7+1.21.1, NeoForge 21.1.209
-**1.20.1**: Architectury API 9.2.14, Fabric Loader 0.16.10 / Fabric API 0.92.2+1.20.1, Forge 47.3.0
+**1.21.11**: Fabric Loader 0.18.4 / Fabric API 0.141.3+1.21.11, NeoForge 21.11.38-beta
+**1.21.10**: Fabric Loader 0.18.4 / Fabric API 0.138.4+1.21.10, NeoForge 21.10.64
+**1.21.9**: Fabric Loader 0.18.4 / Fabric API 0.134.1+1.21.9, NeoForge 21.9.16-beta
+**1.21.8**: Fabric Loader 0.18.4 / Fabric API 0.136.0+1.21.8, NeoForge 21.8.52
+**1.21.7**: Fabric Loader 0.18.4 / Fabric API 0.129.0+1.21.7, NeoForge 21.7.25-beta
+**1.21.6**: Fabric Loader 0.18.4 / Fabric API 0.128.2+1.21.6, NeoForge 21.6.20-beta
+**1.21.5**: Fabric Loader 0.18.4 / Fabric API 0.126.0+1.21.5, NeoForge 21.5.96
+**1.21.4**: Fabric Loader 0.18.4 / Fabric API 0.119.3+1.21.4, NeoForge 21.4.156
+**1.21.3**: Fabric Loader 0.16.10 / Fabric API 0.107.3+1.21.3, NeoForge 21.3.95
+**1.21.1**: Fabric Loader 0.17.3 / Fabric API 0.116.7+1.21.1, NeoForge 21.1.209
+**1.20.1**: Fabric Loader 0.16.10 / Fabric API 0.92.2+1.20.1, Forge 47.3.0
 - Mojang official mappings
 
 ### Platform-Specific gradle.properties

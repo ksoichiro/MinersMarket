@@ -34,7 +34,7 @@ Set up the basic mod initialization and registration system.
   - Use `@Mod` annotation
   - Call common `init()`
   - Create `META-INF/neoforge.mods.toml`
-- [x] 1-4. Create deferred registration helpers using Architectury API
+- [x] 1-4. Create deferred registration helpers using Supplier + factory pattern
   - `ModItems` - Item registry
   - `ModBlocks` - Block registry
   - `ModEntityTypes` - Entity type registry
@@ -56,7 +56,7 @@ Implement the core state machine and persistence.
   - Save/load state, sales amounts, play time on world save/load
 - [x] 2-4. Create network packets to sync state to clients
   - `GameStateSyncPacket` - Sync game state, player's own sales amount, play time
-  - Use Architectury networking API
+  - Use platform-native networking API (packetSender pattern)
 - [x] 2-5. Create `ClientGameState` for client-side state cache
   - Stores current state, own sales amount, play time for HUD rendering
 
@@ -129,7 +129,7 @@ Implement the ore purchase/selling mechanism.
 Implement client-side HUD overlay.
 
 - [x] 7-1. Create `GameHudOverlay` (client-side)
-  - Rendered using Architectury client events or platform-specific render events
+  - Rendered using platform-specific render events
 - [x] 7-2. **Sales Amount Display**
   - Position: Top-right, right-aligned
   - Format: `💰 3,250 / 10,000` (use gold coin sprite if emoji is problematic)
@@ -184,7 +184,7 @@ Implement initial equipment and permanent effects.
 - [x] 10-1. **Initial Equipment on Spawn**
   - Grant Miner's Pickaxe on first spawn and respawn (death)
   - Grant 1 stack of Bread on first spawn and respawn
-  - Use player respawn event (Architectury)
+  - Use platform-native player respawn event
 - [x] 10-2. **Night Vision**
   - Apply permanent Night Vision effect (duration: effectively infinite, e.g., `Integer.MAX_VALUE` ticks)
   - Reapply on respawn

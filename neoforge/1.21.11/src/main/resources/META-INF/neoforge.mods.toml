@@ -23,10 +23,3 @@ type = "required"
 versionRange = "[1.21.11,1.21.12)"
 ordering = "NONE"
 side = "BOTH"
-
-[[dependencies.minersmarket]]
-modId = "architectury"
-type = "required"
-versionRange = "[19,)"
-ordering = "AFTER"
-side = "BOTH"

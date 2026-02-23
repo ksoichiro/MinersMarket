@@ -28,8 +28,6 @@ def commonModule = ':common-1.21.1'
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
     modApi "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
-    modApi "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
-
     common(project(path: commonModule, configuration: 'namedElements')) { transitive false }
     shadowBundle project(path: commonModule, configuration: 'transformProductionFabric')
 }

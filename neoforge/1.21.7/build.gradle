@@ -54,8 +54,6 @@ loom {
 
 dependencies {
     neoForge "net.neoforged:neoforge:${neoforge_version}"
-    modApi "dev.architectury:architectury-neoforge:${architectury_api_version}"
-
     common(project(path: commonModule, configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: commonModule, configuration: "transformProductionNeoForge")) { transitive false }
 }
