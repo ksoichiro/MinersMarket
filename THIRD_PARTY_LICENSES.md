@@ -38,16 +38,6 @@ This document lists all third-party dependencies used in Miner's Market and thei
 - **License URL**: https://github.com/neoforged/NeoForge/blob/1.21.x/LICENSE.txt
 - **Note**: Projects using NeoForge's APIs are not required to be licensed under LGPL-2.1
 
-### Multi-Loader Support
-
-#### Architectury API
-- **Project**: Architectury API
-- **Version**: 13.0.8+
-- **Organization**: Architectury
-- **License**: LGPL-3.0-only
-- **URL**: https://github.com/architectury/architectury-api
-- **License URL**: https://github.com/architectury/architectury-api/blob/1.19.2/LICENSE.md
-
 ## Development Dependencies
 
 ### Build Tools
@@ -85,11 +75,6 @@ Copyleft license that requires derivative works to be licensed under LGPL-2.1. H
 
 **Used by**: NeoForge
 
-### LGPL-3.0-only
-Similar to LGPL-2.1 but with updated terms for modern software development. Allows linking without requiring the linking code to adopt the same license.
-
-**Used by**: Architectury API
-
 ### MIT License
 Very permissive license allowing nearly unrestricted use, modification, and distribution. Only requires preservation of copyright and license notices.
 
@@ -100,13 +85,12 @@ Very permissive license allowing nearly unrestricted use, modification, and dist
 - All dependencies are used in compliance with their respective licenses
 - Runtime dependencies are not bundled with Miner's Market; users must install them separately
 - NeoForge's LGPL-2.1 license does not affect Miner's Market's license due to linking exception
-- Architectury API's LGPL-3.0 license does not affect Miner's Market's license due to linking exception
 
 ## License Compliance
 
 Miner's Market is licensed under the LGPL-3.0-only License. All dependencies are compatible with this license:
 - **Permissive licenses** (Apache 2.0, MIT): Fully compatible
-- **LGPL licenses** (LGPL-2.1, LGPL-3.0): Compatible due to dynamic linking (no license propagation)
+- **LGPL licenses** (LGPL-2.1): Compatible due to dynamic linking (no license propagation)
 
 For questions about licensing, please contact the project maintainer.
 

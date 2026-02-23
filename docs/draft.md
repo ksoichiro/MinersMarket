@@ -171,7 +171,7 @@
 
 ## Architecture
 
-- Minecraft mod using Architectury
+- Minecraft mod supporting Fabric and NeoForge/Forge
 - Compatible with both Fabric and NeoForge
 - Initially implemented for Minecraft version 1.21.1
 - The project will be configured with Gradle as a multi-project setup

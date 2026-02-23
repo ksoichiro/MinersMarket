@@ -438,7 +438,6 @@ if (project.name == 'fabric') {
 
     dependencies {
         prodMods "net.fabricmc.fabric-api:fabric-api:${project.ext.fabric_api_version}"
-        prodMods "dev.architectury:architectury-fabric:${project.ext.architectury_api_version}"
     }
 
     // --- Task: downloadFabricLoader ---
@@ -482,7 +481,7 @@ if (project.name == 'fabric') {
             ant.copy(file: modJar, todir: modsDir)
             logger.lifecycle("  Mod: ${modJar.name}")
 
-            // Dependency mods (Fabric API, Architectury API)
+            // Dependency mods (Fabric API)
             configurations.prodMods.files.each { f ->
                 ant.copy(file: f, todir: modsDir)
                 logger.lifecycle("  Dep: ${f.name}")
@@ -565,10 +564,6 @@ if (project.name == 'neoforge') {
             canBeConsumed = false
             transitive = false
         }
-    }
-
-    dependencies {
-        prodMods "dev.architectury:architectury-neoforge:${project.ext.architectury_api_version}"
     }
 
     def neoforgeVersion = project.ext.neoforge_version
@@ -659,7 +654,7 @@ if (project.name == 'neoforge') {
             ant.copy(file: modJar, todir: modsDir)
             logger.lifecycle("  Mod: ${modJar.name}")
 
-            // Dependency mods (Architectury API)
+            // Dependency mods
             configurations.prodMods.files.each { f ->
                 ant.copy(file: f, todir: modsDir)
                 logger.lifecycle("  Dep: ${f.name}")
@@ -745,10 +740,6 @@ if (project.name == 'forge') {
             canBeConsumed = false
             transitive = false
         }
-    }
-
-    dependencies {
-        prodMods "dev.architectury:architectury-forge:${project.ext.architectury_api_version}"
     }
 
     def forgeVersion = project.ext.forge_version
@@ -839,7 +830,7 @@ if (project.name == 'forge') {
             ant.copy(file: modJar, todir: modsDir)
             logger.lifecycle("  Mod: ${modJar.name}")
 
-            // Dependency mods (Architectury API)
+            // Dependency mods
             configurations.prodMods.files.each { f ->
                 ant.copy(file: f, todir: modsDir)
                 logger.lifecycle("  Dep: ${f.name}")
