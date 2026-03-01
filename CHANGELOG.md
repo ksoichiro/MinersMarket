@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0]
+
+### Added
+
+- Minecraft 1.21.11 support (Fabric + NeoForge)
+- Minecraft 1.21.10 support (Fabric + NeoForge)
+- Anvil sound effect and styled title on game start
+- CurseForge release automation scripts
+- Modrinth release automation scripts
+
+### Changed
+
+- Removed Architectury API runtime dependency (native platform registration)
+
 ## [0.2.0]
 
 ### Added

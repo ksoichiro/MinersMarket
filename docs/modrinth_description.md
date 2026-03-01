@@ -74,12 +74,15 @@ Sell your mined items to the merchant for gold:
 
 ### Multi-Loader Support
 This mod supports **multiple mod loaders**!
-- **1.21.1–1.21.10**: Fabric and NeoForge
+- **1.21.1–1.21.11**: Fabric and NeoForge
 - **1.20.1**: Fabric and Forge
 - Download the correct version for your mod loader
 - Shared codebase ensures consistent experience across loaders
 
 ### Requirements
+
+#### Minecraft 1.21.11
+- **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.141.3+1.21.11, OR NeoForge 21.11.38-beta+
 
 #### Minecraft 1.21.10
 - **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.138.4+1.21.10, OR NeoForge 21.10.64+
@@ -161,6 +164,6 @@ Check out the **Gallery** above for screenshots showcasing:
 
 ---
 
-**Developed for Minecraft Java Edition 1.20.1–1.21.10**
+**Developed for Minecraft Java Edition 1.20.1–1.21.11**
 
 Race to riches! ⛏️

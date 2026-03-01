@@ -20,6 +20,8 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 
 | Minecraft | Mod Loader |
 |-----------|-----------|
+| 1.21.11 | Fabric Loader 0.18.4+ with Fabric API 0.141.3+1.21.11 |
+| 1.21.11 | NeoForge 21.11.38-beta+ |
 | 1.21.10 | Fabric Loader 0.18.4+ with Fabric API 0.138.4+1.21.10 |
 | 1.21.10 | NeoForge 21.10.64+ |
 | 1.21.9 | Fabric Loader 0.18.4+ with Fabric API 0.134.1+1.21.9 |
@@ -44,9 +46,9 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Requirements
 
 ### For Players
-- **Minecraft**: Java Edition 1.20.1–1.21.10
+- **Minecraft**: Java Edition 1.20.1–1.21.11
 - **Mod Loader** (choose one):
-  - **1.21.1–1.21.10**: Fabric with Fabric API, or NeoForge
+  - **1.21.1–1.21.11**: Fabric with Fabric API, or NeoForge
   - **1.20.1**: Fabric with Fabric API, or Forge
 ### For Developers
 - **Java Development Kit (JDK)**: 21 for 1.21.1+, 17 for 1.20.1 (auto-downloaded by toolchain)
@@ -109,14 +111,18 @@ cd MinersMarket
 
 ```
 MinersMarket/
-├── common-shared/           # Shared version-agnostic sources (included via srcDir)
-├── common-<version>/        # Common module per MC version (version-specific APIs)
-├── fabric-base/             # Shared Fabric sources
-├── fabric-<version>/        # Fabric subproject per MC version
-├── neoforge-base/           # Shared NeoForge sources
-├── neoforge-<version>/      # NeoForge subproject per MC version (1.21.1+)
-├── forge-base/              # Shared Forge sources
-├── forge-1.20.1/            # Forge subproject for MC 1.20.1
+├── common/
+│   ├── shared/              # Shared version-agnostic sources (included via srcDir)
+│   └── <version>/           # Common module per MC version (version-specific APIs)
+├── fabric/
+│   ├── base/                # Shared Fabric sources
+│   └── <version>/           # Fabric subproject per MC version
+├── neoforge/
+│   ├── base/                # Shared NeoForge sources
+│   └── <version>/           # NeoForge subproject per MC version (1.21.1+)
+├── forge/
+│   ├── base/                # Shared Forge sources
+│   └── 1.20.1/              # Forge subproject for MC 1.20.1
 ├── props/                   # Version-specific properties
 ├── build.gradle             # Root build configuration (Groovy DSL)
 ├── settings.gradle          # Multi-module settings
@@ -149,4 +155,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**Developed for Minecraft Java Edition 1.20.1–1.21.10**
+**Developed for Minecraft Java Edition 1.20.1–1.21.11**
