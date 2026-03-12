@@ -1,10 +1,8 @@
 package com.minersmarket.state;
 
-import com.minersmarket.hud.GameHudOverlay;
-
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.LongConsumer;
 
 public class ClientGameState {
     private static GameState state = GameState.NOT_STARTED;
@@ -14,6 +12,11 @@ public class ClientGameState {
     private static boolean priceEventActive = false;
     private static int priceEventRemainingTicks = 0;
     private static float priceMultiplier = 1.0f;
+    private static LongConsumer onSaleCallback;
+
+    public static void setOnSaleCallback(LongConsumer callback) {
+        onSaleCallback = callback;
+    }
 
     public record FinishedEntry(String playerName, int finishTimeTicks) {
     }
@@ -23,8 +26,8 @@ public class ClientGameState {
                               boolean priceEventActive, int priceEventRemainingTicks,
                               float priceMultiplier) {
         long earned = salesAmount - ClientGameState.salesAmount;
-        if (earned > 0) {
-            GameHudOverlay.addFloatingText(earned);
+        if (earned > 0 && onSaleCallback != null) {
+            onSaleCallback.accept(earned);
         }
         ClientGameState.state = state;
         ClientGameState.salesAmount = salesAmount;

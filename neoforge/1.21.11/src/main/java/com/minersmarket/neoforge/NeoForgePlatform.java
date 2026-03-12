@@ -155,6 +155,7 @@ public class NeoForgePlatform {
     }
 
     public static void registerClient(IEventBus modBus) {
+        ClientGameState.setOnSaleCallback(GameHudOverlay::addFloatingText);
         modBus.addListener((EntityRenderersEvent.RegisterRenderers event) ->
                 event.registerEntityRenderer(MERCHANT.get(), MerchantEntityRenderer::new));
         modBus.addListener((EntityRenderersEvent.RegisterLayerDefinitions event) ->

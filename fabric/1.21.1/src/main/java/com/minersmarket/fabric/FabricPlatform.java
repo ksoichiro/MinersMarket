@@ -145,6 +145,7 @@ public class FabricPlatform {
     }
 
     public static void registerClient() {
+        ClientGameState.setOnSaleCallback(GameHudOverlay::addFloatingText);
         ClientPlayNetworking.registerGlobalReceiver(GameStateSyncPayload.TYPE, (payload, context) -> {
             context.client().execute(() -> {
                 FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(payload.data));

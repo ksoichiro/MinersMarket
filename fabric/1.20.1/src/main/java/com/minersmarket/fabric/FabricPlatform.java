@@ -114,6 +114,7 @@ public class FabricPlatform {
     }
 
     public static void registerClient() {
+        ClientGameState.setOnSaleCallback(GameHudOverlay::addFloatingText);
         ClientPlayNetworking.registerGlobalReceiver(GameStateSyncPacket.ID,
                 (client, handler, buf, responseSender) -> {
                     // Read data on network thread
