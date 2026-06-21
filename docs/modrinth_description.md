@@ -41,6 +41,7 @@ Sell your mined items to the merchant for gold:
 - **HUD Indicator**: Active price events are shown on your HUD with the current multiplier
 - **Title Announcements**: Price changes are announced with on-screen titles so you never miss them
 - **Strategy Element**: Decide whether to sell now or wait for better prices
+- **Fully Configurable**: Server admins can tune the interval, duration, and price change magnitude
 
 ### 📊 Real-Time HUD
 - **Earnings Display**: Track your current gold with a coin icon
@@ -55,6 +56,11 @@ Sell your mined items to the merchant for gold:
 - **Game Reset Block**: Double-click within 5 seconds to reset the game
 - **Night Vision**: All players receive permanent night vision for mining
 - **Victory Notifications**: Announcements when players reach the goal
+
+### 🛠️ Server Configuration
+- **TOML Config**: Tune gameplay in `config/minersmarket.toml` (server-side only — no client setup needed)
+- **Live Reload**: Apply changes on a running server with `/minersmarket config reload`
+- **Tunable Values**: Win target, start countdown, price event timing and magnitude, and starter items
 
 ---
 

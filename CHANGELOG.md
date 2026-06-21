@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- Server-side configuration via `config/minersmarket.toml` with `/minersmarket config reload`
+- Configurable automatic market generation on world load
+- Configurable game target sales and start countdown
+- Configurable price event interval, duration, and change magnitude
+- Configurable starter items (toggle, player count, bread count, pickaxe Fortune level)
+
 ## [0.3.0]
 
 ### Added

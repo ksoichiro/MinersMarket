@@ -12,7 +12,7 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 - **NPC Merchant**: Sell your mined ores and ingots to a merchant NPC at the market
 - **Auto-Generated Market**: A market structure spawns automatically at the world spawn point
 - **Miner's Pickaxe**: A powerful custom pickaxe with Fortune III, high durability (4096), and fast mining speed
-- **Price Events**: Dynamic price fluctuations occur every 10 minutes, lasting 3–5 minutes — sell at the right time for maximum profit!
+- **Price Events**: Dynamic price fluctuations occur every 10 minutes, lasting 3–5 minutes — sell at the right time for maximum profit! (timing and magnitude are [configurable](#server-configuration))
 - **Real-Time HUD**: Track your earnings, play time, rankings, price events, and market direction on screen
 - **Multiplayer Support**: Designed for competitive multiplayer sessions with rankings and finish notifications
 
@@ -106,6 +106,42 @@ cd MinersMarket
 3. Download and install the required Fabric API (Fabric only)
 4. Copy the corresponding Miner's Market JAR to `.minecraft/mods/` folder
 5. Launch Minecraft with the mod loader profile
+
+## Server Configuration
+
+Server-side settings live in `config/minersmarket.toml`, which is created with default
+values the first time the mod runs. The file is read on the server only; clients do not
+need it.
+
+Apply changes to a running server with:
+
+```
+/minersmarket config reload
+```
+
+Reloading affects future behavior only — it does not rewrite an already-generated market
+or change the target of an in-progress game. The market can also be (re)generated manually
+with `/minersmarket market generate`.
+
+### Settings
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `game.target_sales` | `10000` | Gold a player must earn to win |
+| `game.countdown_seconds` | `5` | Countdown length before a game starts (0–300) |
+| `price_event.interval_seconds` | `600` | Seconds to wait after a price event ends before the next can start |
+| `price_event.duration_min_seconds` | `180` | Minimum price event duration |
+| `price_event.duration_max_seconds` | `300` | Maximum price event duration (must be ≥ min) |
+| `price_event.change_min_percent` | `10` | Minimum price change percentage |
+| `price_event.change_max_percent` | `30` | Maximum price change percentage (must be ≥ min) |
+| `starter_items.enabled` | `true` | Whether the market chest is filled with starting equipment |
+| `starter_items.player_count` | `8` | Number of players to equip, one pickaxe and one bread stack each (0–27) |
+| `starter_items.bread_count` | `64` | Bread items per stack (1–64) |
+| `starter_items.pickaxe_fortune_level` | `3` | Fortune level on the starter pickaxes; 0 disables the enchantment (0–255) |
+| `market.generate_on_world_load` | `true` | Generate the market when an Overworld loads and none exists yet |
+
+Out-of-range or inconsistent values are ignored with a logged warning and fall back to the
+default.
 
 ## Project Structure
 
