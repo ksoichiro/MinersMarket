@@ -71,11 +71,9 @@ public class MinersMarket {
                                         context.getSource().sendFailure(Component.literal("Config directory is not initialized"));
                                         return 0;
                                     }
-                                    MinersMarketConfig config = ConfigLoader.load(configDir);
-                                    boolean generateOnWorldLoad = config.market().generateOnWorldLoad();
+                                    ConfigLoader.load(configDir);
                                     context.getSource().sendSuccess(
-                                            () -> Component.literal("Reloaded Miner's Market config: market.generate_on_world_load="
-                                                    + generateOnWorldLoad),
+                                            () -> Component.literal("Reloaded Miner's Market config"),
                                             true
                                     );
                                     return 1;

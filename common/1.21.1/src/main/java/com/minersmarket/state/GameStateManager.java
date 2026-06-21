@@ -1,5 +1,6 @@
 package com.minersmarket.state;
 
+import com.minersmarket.config.MinersMarketConfig;
 import com.minersmarket.trade.PriceList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -21,8 +22,6 @@ import java.util.UUID;
 
 public class GameStateManager {
     private static final String DATA_ID = "minersmarket_game_state";
-    public static final long TARGET_SALES = 10000;
-
     private static final int COUNTDOWN_SECONDS = 5;
     private static final int TICKS_PER_SECOND = 20;
     private static final int PRICE_EVENT_INTERVAL = 12000;  // 10 minutes
@@ -71,6 +70,7 @@ public class GameStateManager {
         countdownTicks = COUNTDOWN_SECONDS * TICKS_PER_SECOND;
         savedData.salesAmounts.clear();
         savedData.playTime = 0;
+        savedData.targetSales = MinersMarketConfig.get().game().targetSales();
         savedData.setDirty();
     }
 
@@ -292,7 +292,11 @@ public class GameStateManager {
     // Win check
 
     public boolean hasReachedTarget(UUID playerId) {
-        return getSalesAmount(playerId) >= TARGET_SALES;
+        return getSalesAmount(playerId) >= savedData.targetSales;
+    }
+
+    public long getTargetSales() {
+        return savedData.targetSales;
     }
 
     // Market generation

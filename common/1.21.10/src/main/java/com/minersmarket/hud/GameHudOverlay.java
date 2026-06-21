@@ -3,7 +3,6 @@ package com.minersmarket.hud;
 import com.minersmarket.MinersMarket;
 import com.minersmarket.state.ClientGameState;
 import com.minersmarket.state.GameState;
-import com.minersmarket.state.GameStateManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.DeltaTracker;
@@ -71,7 +70,7 @@ public class GameHudOverlay {
 
         // Sales amount display
         long sales = ClientGameState.getSalesAmount();
-        String salesText = String.format("%,d / %,d", sales, GameStateManager.TARGET_SALES);
+        String salesText = String.format("%,d / %,d", sales, ClientGameState.getTargetSales());
         int textWidth = mc.font.width(salesText);
         int x = screenWidth - textWidth - MARGIN - COIN_SIZE - 2;
 

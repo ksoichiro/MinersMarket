@@ -1,5 +1,6 @@
 package com.minersmarket.state;
 
+import com.minersmarket.config.ConfigDefaults;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -14,6 +15,7 @@ public class GameStateSavedData extends SavedData {
     final Map<UUID, Long> salesAmounts = new HashMap<>();
     final List<FinishedPlayer> finishedPlayers = new ArrayList<>();
     int playTime = 0;
+    long targetSales = ConfigDefaults.GAME_TARGET_SALES;
     boolean marketGenerated = false;
 
     public GameStateSavedData() {
@@ -23,6 +25,7 @@ public class GameStateSavedData extends SavedData {
         GameStateSavedData data = new GameStateSavedData();
         data.state = GameState.values()[tag.getInt("state")];
         data.playTime = tag.getInt("playTime");
+        data.targetSales = tag.contains("targetSales") ? tag.getLong("targetSales") : ConfigDefaults.GAME_TARGET_SALES;
         data.marketGenerated = tag.getBoolean("marketGenerated");
         CompoundTag salesTag = tag.getCompound("salesAmounts");
         for (String key : salesTag.getAllKeys()) {
@@ -46,6 +49,7 @@ public class GameStateSavedData extends SavedData {
     public CompoundTag save(CompoundTag tag) {
         tag.putInt("state", state.ordinal());
         tag.putInt("playTime", playTime);
+        tag.putLong("targetSales", targetSales);
         tag.putBoolean("marketGenerated", marketGenerated);
         CompoundTag salesTag = new CompoundTag();
         salesAmounts.forEach((uuid, amount) -> salesTag.putLong(uuid.toString(), amount));

@@ -18,8 +18,12 @@ public final class ConfigLoader {
     private static final String BUNDLED_DEFAULT_RESOURCE = "/minersmarket-default-config.toml";
 
     private static final String K_SCHEMA_VERSION = "schema_version";
+    private static final String K_GAME = "game";
+    private static final String K_TARGET_SALES = "target_sales";
     private static final String K_MARKET = "market";
     private static final String K_GENERATE_ON_WORLD_LOAD = "generate_on_world_load";
+
+    private static final long MIN_TARGET_SALES = 1L;
 
     private ConfigLoader() {
     }
@@ -79,16 +83,24 @@ public final class ConfigLoader {
                 K_MARKET + "." + K_GENERATE_ON_WORLD_LOAD,
                 ConfigDefaults.MARKET_GENERATE_ON_WORLD_LOAD
         );
+        long targetSales = readLong(
+                parsed,
+                K_GAME + "." + K_TARGET_SALES,
+                ConfigDefaults.GAME_TARGET_SALES,
+                MIN_TARGET_SALES,
+                Long.MAX_VALUE
+        );
 
         for (CommentedConfig.Entry entry : parsed.entrySet()) {
             String key = entry.getKey();
-            if (!key.equals(K_SCHEMA_VERSION) && !key.equals(K_MARKET)) {
+            if (!key.equals(K_SCHEMA_VERSION) && !key.equals(K_GAME) && !key.equals(K_MARKET)) {
                 LOGGER.warn("Unknown top-level key in {}: {}", CONFIG_FILE_NAME, key);
             }
         }
 
         return new MinersMarketConfig(
                 schemaVersion,
+                new MinersMarketConfig.Game(targetSales),
                 new MinersMarketConfig.Market(generateOnWorldLoad)
         );
     }
@@ -116,6 +128,22 @@ public final class ConfigLoader {
         }
         LOGGER.error("Invalid {}.{} = {} (must be true or false); using default {}",
                 CONFIG_FILE_NAME, path, value, defaultValue);
+        return defaultValue;
+    }
+
+    private static long readLong(CommentedConfig parsed, String path, long defaultValue, long min, long max) {
+        Object value = parsed.get(path);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Number number) {
+            long longValue = number.longValue();
+            if (longValue >= min && longValue <= max) {
+                return longValue;
+            }
+        }
+        LOGGER.error("Invalid {}.{} = {} (must be in [{}, {}]); using default {}",
+                CONFIG_FILE_NAME, path, value, min, max, defaultValue);
         return defaultValue;
     }
 }

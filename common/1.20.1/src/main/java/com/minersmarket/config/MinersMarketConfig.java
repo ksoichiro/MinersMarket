@@ -2,6 +2,7 @@ package com.minersmarket.config;
 
 public record MinersMarketConfig(
         int schemaVersion,
+        Game game,
         Market market
 ) {
     public static final int CURRENT_SCHEMA_VERSION = 1;
@@ -17,5 +18,8 @@ public record MinersMarketConfig(
     }
 
     public record Market(boolean generateOnWorldLoad) {
+    }
+
+    public record Game(long targetSales) {
     }
 }

@@ -4,6 +4,10 @@
 
 schema_version = 1
 
+[game]
+# Sales amount required for a player to finish the game.
+target_sales = 10000
+
 [market]
 # If true, the market is generated when an Overworld is loaded and no market has
 # been generated for that world yet.

@@ -32,6 +32,7 @@ public class GameStateSyncPacket {
     public static void encode(FriendlyByteBuf buf, ServerPlayer player, GameStateManager manager) {
         buf.writeInt(manager.getState().ordinal());
         buf.writeLong(manager.getSalesAmount(player.getUUID()));
+        buf.writeLong(manager.getTargetSales());
         buf.writeInt(manager.getPlayTime());
         List<FinishedPlayer> finished = manager.getFinishedPlayers();
         buf.writeInt(finished.size());
@@ -50,6 +51,7 @@ public class GameStateSyncPacket {
     public static void applyOnClient(FriendlyByteBuf buf) {
         int stateOrdinal = buf.readInt();
         long salesAmount = buf.readLong();
+        long targetSales = buf.readLong();
         int playTime = buf.readInt();
         int finishedCount = buf.readInt();
         List<ClientGameState.FinishedEntry> finishedEntries = new ArrayList<>();
@@ -65,7 +67,7 @@ public class GameStateSyncPacket {
             eventRemainingTicks = buf.readInt();
             multiplier = buf.readFloat();
         }
-        ClientGameState.update(GameState.values()[stateOrdinal], salesAmount, playTime,
+        ClientGameState.update(GameState.values()[stateOrdinal], salesAmount, targetSales, playTime,
                 finishedEntries, hasEvent, eventRemainingTicks, multiplier);
     }
 }

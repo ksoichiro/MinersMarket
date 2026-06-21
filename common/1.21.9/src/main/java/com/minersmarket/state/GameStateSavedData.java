@@ -1,5 +1,6 @@
 package com.minersmarket.state;
 
+import com.minersmarket.config.ConfigDefaults;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -15,11 +16,13 @@ public class GameStateSavedData extends SavedData {
     final Map<UUID, Long> salesAmounts = new HashMap<>();
     final List<FinishedPlayer> finishedPlayers = new ArrayList<>();
     int playTime = 0;
+    long targetSales = ConfigDefaults.GAME_TARGET_SALES;
     boolean marketGenerated = false;
 
     public static final Codec<GameStateSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.optionalFieldOf("state", 0).forGetter(d -> d.state.ordinal()),
             Codec.INT.optionalFieldOf("playTime", 0).forGetter(d -> d.playTime),
+            Codec.LONG.optionalFieldOf("targetSales", ConfigDefaults.GAME_TARGET_SALES).forGetter(d -> d.targetSales),
             Codec.BOOL.optionalFieldOf("marketGenerated", false).forGetter(d -> d.marketGenerated),
             Codec.unboundedMap(Codec.STRING, Codec.LONG).optionalFieldOf("salesAmounts", Map.of())
                     .forGetter(d -> {
@@ -34,11 +37,12 @@ public class GameStateSavedData extends SavedData {
     public GameStateSavedData() {
     }
 
-    private static GameStateSavedData fromCodec(int stateOrdinal, int playTime, boolean marketGenerated,
+    private static GameStateSavedData fromCodec(int stateOrdinal, int playTime, long targetSales, boolean marketGenerated,
                                                 Map<String, Long> salesMap, List<FinishedPlayer> finishedPlayers) {
         GameStateSavedData data = new GameStateSavedData();
         data.state = GameState.values()[stateOrdinal];
         data.playTime = playTime;
+        data.targetSales = targetSales;
         data.marketGenerated = marketGenerated;
         salesMap.forEach((key, value) -> data.salesAmounts.put(UUID.fromString(key), value));
         data.finishedPlayers.addAll(finishedPlayers);
