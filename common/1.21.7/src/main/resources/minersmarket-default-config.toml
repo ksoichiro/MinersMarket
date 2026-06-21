@@ -7,6 +7,30 @@ schema_version = 1
 [game]
 # Sales amount required for a player to finish the game.
 target_sales = 10000
+# Countdown length in seconds before the game starts.
+countdown_seconds = 5
+
+[price_event]
+# Seconds to wait after one price event ends before the next one can start.
+interval_seconds = 600
+# Minimum duration of a price event in seconds.
+duration_min_seconds = 180
+# Maximum duration of a price event in seconds (must be >= duration_min_seconds).
+duration_max_seconds = 300
+# Minimum price change as a percentage.
+change_min_percent = 10
+# Maximum price change as a percentage (must be >= change_min_percent).
+change_max_percent = 30
+
+[starter_items]
+# If true, the market chest is filled with starting equipment.
+enabled = true
+# Number of players to equip (each gets one pickaxe and one bread stack).
+player_count = 8
+# Number of bread items per stack.
+bread_count = 64
+# Fortune enchantment level on the starter pickaxes (0 disables the enchantment).
+pickaxe_fortune_level = 3
 
 [market]
 # If true, the market is generated when an Overworld is loaded and no market has

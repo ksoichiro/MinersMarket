@@ -1,6 +1,7 @@
 package com.minersmarket.structure;
 
 import com.minersmarket.MinersMarket;
+import com.minersmarket.config.MinersMarketConfig;
 import com.minersmarket.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -36,7 +37,6 @@ public class MarketGenerator {
     private static final int SEARCH_STEP = 4;
     // Y offset from structure origin to player foot level (merchants are at Y=2 in the template)
     private static final int FLOOR_HEIGHT = 2;
-    private static final int PLAYER_COUNT = 8;
 
     /**
      * Place the market NBT structure at the best location near the given X/Z.
@@ -97,7 +97,9 @@ public class MarketGenerator {
         removeDroppedItems(level, placePos, size);
 
         // Fill large chest with equipment for players
-        fillChest(level, placePos, size);
+        if (MinersMarketConfig.get().starterItems().enabled()) {
+            fillChest(level, placePos, size);
+        }
 
         // Set world spawn inside the market (center, above the floor)
         BlockPos spawnPos = new BlockPos(
@@ -194,18 +196,24 @@ public class MarketGenerator {
     }
 
     private static void fillChestWithEquipment(ServerLevel level, Container container) {
+        MinersMarketConfig.StarterItems config = MinersMarketConfig.get().starterItems();
+        int playerCount = config.playerCount();
+        int fortuneLevel = config.pickaxeFortuneLevel();
+        int breadCount = config.breadCount();
         int slot = 0;
-        for (int i = 0; i < PLAYER_COUNT; i++) {
+        for (int i = 0; i < playerCount; i++) {
             ItemStack pickaxe = new ItemStack(ModItems.MINERS_PICKAXE.get());
-            pickaxe.enchant(
-                    level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
-                            .getOrThrow(Enchantments.FORTUNE),
-                    3
-            );
+            if (fortuneLevel > 0) {
+                pickaxe.enchant(
+                        level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                                .getOrThrow(Enchantments.FORTUNE),
+                        fortuneLevel
+                );
+            }
             container.setItem(slot++, pickaxe);
         }
-        for (int i = 0; i < PLAYER_COUNT; i++) {
-            container.setItem(slot++, new ItemStack(Items.BREAD, 64));
+        for (int i = 0; i < playerCount; i++) {
+            container.setItem(slot++, new ItemStack(Items.BREAD, breadCount));
         }
     }
 

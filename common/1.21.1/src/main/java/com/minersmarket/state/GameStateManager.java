@@ -22,17 +22,17 @@ import java.util.UUID;
 
 public class GameStateManager {
     private static final String DATA_ID = "minersmarket_game_state";
-    private static final int COUNTDOWN_SECONDS = 5;
     private static final int TICKS_PER_SECOND = 20;
-    private static final int PRICE_EVENT_INTERVAL = 12000;  // 10 minutes
-    private static final int PRICE_EVENT_DURATION_MIN_MINUTES = 3;
-    private static final int PRICE_EVENT_DURATION_MAX_MINUTES = 5;
+
+    private static int priceEventIntervalTicks() {
+        return MinersMarketConfig.get().priceEvent().intervalSeconds() * TICKS_PER_SECOND;
+    }
 
     private static GameStateManager instance;
     private final GameStateSavedData savedData;
     private ServerLevel serverLevel;
     private int countdownTicks = -1;
-    private int priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+    private int priceEventCooldownTicks = priceEventIntervalTicks();
     private int priceEventDurationTicks = 0;
     private float priceMultiplier = 1.0f;
     private final Random random = new Random();
@@ -67,7 +67,7 @@ public class GameStateManager {
     // State transitions
 
     public void startCountdown() {
-        countdownTicks = COUNTDOWN_SECONDS * TICKS_PER_SECOND;
+        countdownTicks = MinersMarketConfig.get().game().countdownSeconds() * TICKS_PER_SECOND;
         savedData.salesAmounts.clear();
         savedData.playTime = 0;
         savedData.targetSales = MinersMarketConfig.get().game().targetSales();
@@ -80,7 +80,7 @@ public class GameStateManager {
 
     private void start() {
         savedData.state = GameState.IN_PROGRESS;
-        priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+        priceEventCooldownTicks = priceEventIntervalTicks();
         priceEventDurationTicks = 0;
         priceMultiplier = 1.0f;
         savedData.setDirty();
@@ -97,7 +97,7 @@ public class GameStateManager {
         savedData.salesAmounts.clear();
         savedData.finishedPlayers.clear();
         countdownTicks = -1;
-        priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+        priceEventCooldownTicks = priceEventIntervalTicks();
         priceEventDurationTicks = 0;
         priceMultiplier = 1.0f;
         savedData.setDirty();
@@ -141,7 +141,7 @@ public class GameStateManager {
             priceEventDurationTicks--;
             if (priceEventDurationTicks == 0) {
                 priceMultiplier = 1.0f;
-                priceEventCooldownTicks = PRICE_EVENT_INTERVAL;
+                priceEventCooldownTicks = priceEventIntervalTicks();
                 broadcastMessage(Component.translatable("message.minersmarket.price_event_end"));
             }
         } else {
@@ -153,16 +153,19 @@ public class GameStateManager {
     }
 
     public void startPriceEvent() {
-        // Randomly choose up or down, then 10-30% change
+        MinersMarketConfig.PriceEvent config = MinersMarketConfig.get().priceEvent();
+        // Randomly choose up or down, then apply a configured percentage change.
         boolean up = random.nextBoolean();
-        float percentage = 0.1f + random.nextFloat() * 0.2f;
+        float minPercent = config.changeMinPercent() / 100.0f;
+        float maxPercent = config.changeMaxPercent() / 100.0f;
+        float percentage = minPercent + random.nextFloat() * (maxPercent - minPercent);
         priceMultiplier = up ? 1.0f + percentage : 1.0f - percentage;
-        int durationMinutes = PRICE_EVENT_DURATION_MIN_MINUTES
-                + random.nextInt(PRICE_EVENT_DURATION_MAX_MINUTES - PRICE_EVENT_DURATION_MIN_MINUTES + 1);
-        priceEventDurationTicks = durationMinutes * 60 * 20;
+        int durationSeconds = config.durationMinSeconds()
+                + random.nextInt(config.durationMaxSeconds() - config.durationMinSeconds() + 1);
+        priceEventDurationTicks = durationSeconds * TICKS_PER_SECOND;
         broadcastTitleWithSubtitle(
                 Component.translatable("message.minersmarket.price_event_start"),
-                Component.translatable("message.minersmarket.price_event_start_subtitle", durationMinutes),
+                Component.translatable("message.minersmarket.price_event_start_subtitle", durationSeconds),
                 10, 60, 20
         );
     }
