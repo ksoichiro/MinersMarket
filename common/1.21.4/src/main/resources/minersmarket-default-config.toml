@@ -1,0 +1,10 @@
+# Miner's Market server configuration.
+# Changes can be applied while the server is running with:
+# /minersmarket config reload
+
+schema_version = 1
+
+[market]
+# If true, the market is generated when an Overworld is loaded and no market has
+# been generated for that world yet.
+generate_on_world_load = true

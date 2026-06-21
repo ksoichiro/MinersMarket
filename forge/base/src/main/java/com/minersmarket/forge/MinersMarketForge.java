@@ -6,6 +6,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 @Mod(MinersMarket.MOD_ID)
@@ -14,7 +15,7 @@ public class MinersMarketForge {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ForgePlatform.registerAll(modBus);
         ForgePlatform.registerEvents();
-        MinersMarket.init();
+        MinersMarket.init(FMLPaths.CONFIGDIR.get());
         if (FMLEnvironment.dist == Dist.CLIENT) {
             MinersMarketForgeClient.init(modBus);
         }
