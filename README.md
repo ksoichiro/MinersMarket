@@ -57,8 +57,11 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Building from Source
 
 ```bash
-git clone https://github.com/ksoichiro/MinersMarket.git
+# --recurse-submodules fetches gradle/shared (shared Gradle release tasks)
+git clone --recurse-submodules https://github.com/ksoichiro/MinersMarket.git
 cd MinersMarket
+# If you cloned without the flag above:
+# git submodule update --init
 
 # Build for a specific version
 ./gradlew build -Ptarget_mc_version=1.21.1
@@ -69,6 +72,18 @@ cd MinersMarket
 
 # Full release (clean + buildAll + collectJars)
 ./gradlew release
+```
+
+### Publishing
+
+After `./gradlew release` populates `build/release/`, publish the JARs with the
+shared Gradle tasks (from the `gradle/shared` submodule). API tokens are read
+from the `MODRINTH_TOKEN` / `CURSEFORGE_TOKEN` environment variables.
+
+```bash
+./gradlew releaseModrinth      # publish all JARs to Modrinth
+./gradlew releaseCurseForge    # publish all JARs to CurseForge
+# Single file: ./gradlew releaseModrinth -Pjar=minersmarket-<ver>+<mc>-<loader>.jar
 ```
 
 **Output Files** (examples):

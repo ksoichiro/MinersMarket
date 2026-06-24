@@ -1,0 +1,3 @@
+[submodule "gradle/shared"]
+	path = gradle/shared
+	url = https://github.com/ksoichiro/minecraft-mod-gradle-scripts.git

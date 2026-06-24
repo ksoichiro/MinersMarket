@@ -28,9 +28,15 @@ Miner's Market is a Minecraft mod where players compete to earn 10,000 gold by m
 
 # Collect built JARs into build/release/
 ./gradlew collectJars
+
+# Publish collected JARs (tokens via MODRINTH_TOKEN / CURSEFORGE_TOKEN env vars)
+./gradlew releaseModrinth      # or -Pjar=<file> for a single JAR
+./gradlew releaseCurseForge    # or -Pjar=<file> for a single JAR
 ```
 
 Note: Tests are excluded from builds (`-x test`). The build system auto-downloads the correct JDK via Foojay toolchain resolver (JDK 21 for 1.21.1+, JDK 17 for 1.20.1).
+
+The `releaseModrinth` / `releaseCurseForge` tasks come from the `gradle/shared` git submodule ([minecraft-mod-gradle-scripts](https://github.com/ksoichiro/minecraft-mod-gradle-scripts)), applied in `build.gradle`. After a fresh clone, run `git submodule update --init` if the submodule is missing. Release IDs are configured in `gradle.properties` (`modrinth_project_id`, `curseforge_project_id`, `release_project_name`).
 
 ## Architecture
 
