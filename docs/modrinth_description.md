@@ -80,12 +80,28 @@ Sell your mined items to the merchant for gold:
 
 ### Multi-Loader Support
 This mod supports **multiple mod loaders**!
+- **26.1.1–26.2**: Fabric and NeoForge (requires Java 25)
+- **26.1**: NeoForge only (requires Java 25)
 - **1.21.1–1.21.11**: Fabric and NeoForge
 - **1.20.1**: Fabric and Forge
 - Download the correct version for your mod loader
 - Shared codebase ensures consistent experience across loaders
 
 ### Requirements
+
+> Minecraft 26.x requires a **Java 25** runtime.
+
+#### Minecraft 26.2
+- **Mod Loader**: Fabric Loader 0.18.5+ with Fabric API 0.152.2+26.2, OR NeoForge 26.2.0.6-beta+
+
+#### Minecraft 26.1.2
+- **Mod Loader**: Fabric Loader 0.18.5+ with Fabric API 0.145.4+26.1.2, OR NeoForge 26.1.2.4-beta+
+
+#### Minecraft 26.1.1
+- **Mod Loader**: Fabric Loader 0.18.5+ with Fabric API 0.145.4+26.1.1, OR NeoForge 26.1.1.15-beta+
+
+#### Minecraft 26.1
+- **Mod Loader**: NeoForge 26.1.0.1-beta+ (NeoForge only)
 
 #### Minecraft 1.21.11
 - **Mod Loader**: Fabric Loader 0.18.4+ with Fabric API 0.141.3+1.21.11, OR NeoForge 21.11.38-beta+
@@ -145,7 +161,7 @@ Check out the **Gallery** above for screenshots showcasing:
 
 ## 🤝 Credits
 
-- Built with [Architectury Loom](https://github.com/architectury/architectury-loom) (build tooling)
+- Built with [Fabric Loom](https://github.com/FabricMC/fabric-loom) and [ModDevGradle](https://github.com/neoforged/ModDevGradle) (build tooling)
 
 ---
 
@@ -170,6 +186,6 @@ Check out the **Gallery** above for screenshots showcasing:
 
 ---
 
-**Developed for Minecraft Java Edition 1.20.1–1.21.11**
+**Developed for Minecraft Java Edition 1.20.1–26.2**
 
 Race to riches! ⛏️

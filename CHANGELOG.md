@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.0]
+
 ### Added
 
+- Minecraft 26.2 support (Fabric + NeoForge)
+- Minecraft 26.1.2 support (Fabric + NeoForge)
+- Minecraft 26.1.1 support (Fabric + NeoForge)
+- Minecraft 26.1 support (NeoForge)
 - Server-side configuration via `config/minersmarket.toml` with `/minersmarket config reload`
 - Configurable automatic market generation on world load
 - Configurable game target sales and start countdown

@@ -18,8 +18,17 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 
 ## Supported Versions
 
+> Minecraft 26.x requires a **Java 25** runtime.
+
 | Minecraft | Mod Loader |
 |-----------|-----------|
+| 26.2 | Fabric Loader 0.18.5+ with Fabric API 0.152.2+26.2 |
+| 26.2 | NeoForge 26.2.0.6-beta+ |
+| 26.1.2 | Fabric Loader 0.18.5+ with Fabric API 0.145.4+26.1.2 |
+| 26.1.2 | NeoForge 26.1.2.4-beta+ |
+| 26.1.1 | Fabric Loader 0.18.5+ with Fabric API 0.145.4+26.1.1 |
+| 26.1.1 | NeoForge 26.1.1.15-beta+ |
+| 26.1 | NeoForge 26.1.0.1-beta+ (NeoForge only) |
 | 1.21.11 | Fabric Loader 0.18.4+ with Fabric API 0.141.3+1.21.11 |
 | 1.21.11 | NeoForge 21.11.38-beta+ |
 | 1.21.10 | Fabric Loader 0.18.4+ with Fabric API 0.138.4+1.21.10 |
@@ -46,12 +55,14 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Requirements
 
 ### For Players
-- **Minecraft**: Java Edition 1.20.1–1.21.11
+- **Minecraft**: Java Edition 1.20.1–26.2
 - **Mod Loader** (choose one):
+  - **26.1.1–26.2**: Fabric with Fabric API, or NeoForge (requires Java 25)
+  - **26.1**: NeoForge only (requires Java 25)
   - **1.21.1–1.21.11**: Fabric with Fabric API, or NeoForge
   - **1.20.1**: Fabric with Fabric API, or Forge
 ### For Developers
-- **Java Development Kit (JDK)**: 21 for 1.21.1+, 17 for 1.20.1 (auto-downloaded by toolchain)
+- **Java Development Kit (JDK)**: 25 for 26.x, 21 for 1.21.1+, 17 for 1.20.1 (auto-downloaded by toolchain)
 - **IDE**: IntelliJ IDEA (recommended) or Eclipse
 
 ## Building from Source
@@ -183,8 +194,9 @@ MinersMarket/
 ## Technical Notes
 
 - **Build DSL**: Groovy DSL
+- **Build Tooling**: Fabric Loom (Fabric/common) and ModDevGradle (NeoForge/Forge), selected by MC version in `settings.gradle`
 - **Mappings**: Mojang mappings (official Minecraft class names)
-- **Shadow Plugin**: Bundles common module into loader-specific JARs
+- **Common Sharing**: The common module exposes sources/resources to platform modules via `commonJava`/`commonResources` configurations
 - **Persistence**: Uses `SavedData` to track game state across server restarts
 
 ## License
@@ -197,7 +209,7 @@ See the [COPYING](COPYING) and [COPYING.LESSER](COPYING.LESSER) files for full l
 
 ## Credits
 
-- Built with [Architectury Loom](https://github.com/architectury/architectury-loom) (build tooling)
+- Built with [Fabric Loom](https://github.com/FabricMC/fabric-loom) and [ModDevGradle](https://github.com/neoforged/ModDevGradle) (build tooling)
 
 ## Support
 
@@ -206,4 +218,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**Developed for Minecraft Java Edition 1.20.1–1.21.11**
+**Developed for Minecraft Java Edition 1.20.1–26.2**
