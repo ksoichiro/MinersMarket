@@ -1,0 +1,80 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+configurations {
+    commonJava {
+        canBeResolved = true
+    }
+    commonResources {
+        canBeResolved = true
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    // Bundle the TOML config library into the Fabric jar (include) and put it on the
+    // compile classpath (implementation), since the shared config code references it.
+    implementation "com.electronwill.night-config:core:3.8.3"
+    implementation "com.electronwill.night-config:toml:3.8.3"
+    include "com.electronwill.night-config:core:3.8.3"
+    include "com.electronwill.night-config:toml:3.8.3"
+
+    compileOnly project(':common')
+
+    commonJava project(path: ':common', configuration: 'commonJava')
+    commonResources project(path: ':common', configuration: 'commonResources')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir '../base/src/main/java'
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+            srcDir '../base/src/main/resources'
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn configurations.commonJava
+    source configurations.commonJava
+}
+
+tasks.named('processResources') {
+    dependsOn configurations.commonResources
+    from configurations.commonResources
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    archiveBaseName = rootProject.archives_name
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-fabric"
+    archiveClassifier = null
+}
+
+sourcesJar {
+    archiveBaseName = rootProject.archives_name
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-fabric"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        mavenFabric(MavenPublication) {
+            artifactId = "${rootProject.archives_name}-fabric"
+            from components.java
+        }
+    }
+    repositories {
+    }
+}

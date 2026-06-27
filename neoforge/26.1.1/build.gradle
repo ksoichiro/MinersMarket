@@ -1,0 +1,103 @@
+plugins {
+    id 'net.neoforged.moddev'
+}
+
+neoForge {
+    version = neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        minersmarket {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+configurations {
+    commonJava {
+        canBeResolved = true
+    }
+    commonResources {
+        canBeResolved = true
+    }
+}
+
+dependencies {
+    compileOnly project(':common')
+    // Common sources reference the TOML config library; NeoForge ships night-config
+    // at runtime, so it is only needed on the compile classpath here.
+    compileOnly "com.electronwill.night-config:core:3.8.3"
+    compileOnly "com.electronwill.night-config:toml:3.8.3"
+    // Common client-only classes use Fabric's @Environment annotation (previously
+    // remapped by Architectury). Provide it on the compile classpath only;
+    // it is CLASS-retention and ignored by NeoForge at runtime.
+    compileOnly "net.fabricmc:fabric-loader:${fabric_loader_version}"
+
+    commonJava project(path: ':common', configuration: 'commonJava')
+    commonResources project(path: ':common', configuration: 'commonResources')
+}
+
+sourceSets {
+    main {
+        java {
+            // NeoForge 21.9+ has breaking API changes (FMLEnvironment.getDist()),
+            // so sources are kept locally instead of using neoforge-base.
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDirs = []
+            // Version-specific resources FIRST (higher priority)
+            srcDir 'src/main/resources'
+            // Shared resources SECOND (lower priority)
+            srcDir '../base/src/main/resources'
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn configurations.commonJava
+    source configurations.commonJava
+}
+
+tasks.named('processResources') {
+    dependsOn configurations.commonResources
+    from configurations.commonResources
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property 'version', project.version
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    archiveBaseName = rootProject.archives_name
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-neoforge"
+    archiveClassifier = null
+}
+
+sourcesJar {
+    archiveBaseName = rootProject.archives_name
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-neoforge"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        mavenNeoForge(MavenPublication) {
+            artifactId = "${rootProject.archives_name}-neoforge"
+            from components.java
+        }
+    }
+
+    repositories {
+    }
+}
