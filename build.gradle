@@ -1,7 +1,9 @@
 plugins {
-    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
-    id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'com.gradleup.shadow' version '8.3.6' apply false
+    // Fabric Loom (fabric / common modules) is declared in settings.gradle,
+    // conditionally by MC version (fabric-loom for 1.x, net.fabricmc.fabric-loom for 26.x+).
+    // NeoForge and legacy Forge use ModDevGradle, declared here and applied per module.
+    id 'net.neoforged.moddev' version "${moddevgradle_version}" apply false
+    id 'net.neoforged.moddev.legacyforge' version "${moddevgradle_version}" apply false
 }
 
 // Multi-version support: Load version-specific properties
@@ -30,18 +32,15 @@ if (targetVersion == null) {
 }
 loadVersionProperties(targetVersion)
 
-architectury {
-    minecraft = project.ext.minecraft_version
-}
-
 allprojects {
     group = rootProject.maven_group
     version = rootProject.mod_version
 }
 
 subprojects {
-    apply plugin: 'dev.architectury.loom'
-    apply plugin: 'architectury-plugin'
+    // Loom (fabric/common) and ModDevGradle (neoforge/forge) are applied by each
+    // module's own plugins block; here we only apply the shared java/publish setup.
+    apply plugin: 'java'
     apply plugin: 'maven-publish'
 
     // Propagate version-specific properties to subprojects
@@ -65,21 +64,25 @@ subprojects {
     if (rootProject.ext.has('neoforge_version')) {
         ext.neoforge_version = rootProject.ext.neoforge_version
     }
+    if (rootProject.ext.has('neoform_version')) {
+        ext.neoform_version = rootProject.ext.neoform_version
+    }
     if (rootProject.ext.has('forge_version')) {
         ext.forge_version = rootProject.ext.forge_version
     }
-
-    repositories {
-        maven { url 'https://maven.architectury.dev/' }
-        maven { url 'https://maven.neoforged.net/releases/' }
-        maven { url 'https://maven.minecraftforge.net/' }
-        maven { url 'https://maven.fabricmc.net/' }
-        mavenCentral()
+    if (rootProject.ext.has('forge_major_version')) {
+        ext.forge_major_version = rootProject.ext.forge_major_version
     }
 
-    dependencies {
-        minecraft "com.mojang:minecraft:$rootProject.ext.minecraft_version"
-        mappings loom.officialMojangMappings()
+    repositories {
+        maven {
+            name = 'Minecraft libraries'
+            url = 'https://libraries.minecraft.net'
+        }
+        maven { url 'https://maven.neoforged.net/releases/' }
+        maven { url 'https://maven.fabricmc.net/' }
+        maven { url 'https://maven.minecraftforge.net/' }
+        mavenCentral()
     }
 
     java {
@@ -111,7 +114,7 @@ subprojects {
         // Production run support (runProd)
         apply from: "${rootDir}/gradle/prod-run.gradle"
 
-        // Common resource processing
+        // Common resource processing (pack.mcmeta format expansion)
         tasks.withType(ProcessResources).configureEach {
             if (project.ext.has('pack_format')) {
                 inputs.property 'pack_format', project.ext.pack_format

@@ -1,0 +1,31 @@
+// buildSrc makes the shared NBT converter classes available to all build scripts
+// via the (uniform) buildscript classpath. Unlike applying the shared Gradle plugin
+// or adding a per-module buildscript dependency, buildSrc does NOT diverge any
+// project's buildscript classloader, so it is compatible with Fabric Loom.
+//
+// Only the pure converter classes are compiled (they depend solely on the Querz
+// NBT library, not the Gradle API), reused directly from the gradle/shared
+// submodule sources — no duplication.
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.Querz:NBT:6.1'
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDir '../gradle/shared/src/main/groovy'
+            include 'com/github/ksoichiro/mcmod/NbtConverter.groovy'
+            include 'com/github/ksoichiro/mcmod/DefaultNbtConverter.groovy'
+            include 'com/github/ksoichiro/mcmod/V1_21ToV1_20NbtConverter.groovy'
+        }
+    }
+}

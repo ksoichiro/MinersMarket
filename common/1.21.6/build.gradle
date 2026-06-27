@@ -1,35 +1,49 @@
-architectury {
-    common rootProject.ext.enabled_platforms.split(',')
-}
-
-loom {
-    //accessWidenerPath = file("src/main/resources/minersmarket.accesswidener")
+plugins {
+    id 'fabric-loom'
 }
 
 sourceSets {
     main {
         java {
-            srcDir 'src/main/java'
             // common-shared sources are copied into src/main/java for 1.21.6
             // because 1.21.2+ has breaking API changes in ModEntityTypes, ModItems, etc.
+            srcDir 'src/main/java'
         }
+        // resources use the default src/main/resources dir
     }
 }
 
 dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     compileOnly "com.electronwill.night-config:core:3.8.3"
     compileOnly "com.electronwill.night-config:toml:3.8.3"
-
-    testImplementation "com.electronwill.night-config:core:3.8.3"
-    testImplementation "com.electronwill.night-config:toml:3.8.3"
 }
 
-// Expand pack_format variable in pack.mcmeta
+// Expose sources and resources to the platform modules.
+configurations {
+    commonJava {
+        canBeConsumed = true
+        canBeResolved = false
+    }
+    commonResources {
+        canBeConsumed = true
+        canBeResolved = false
+    }
+}
+
+artifacts {
+    sourceSets.main.java.srcDirs.each { dir -> commonJava dir }
+    sourceSets.main.resources.srcDirs.each { dir -> commonResources dir }
+}
+
+// Expand pack_format variable in pack.mcmeta.
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property 'pack_format', project.ext.pack_format
 
     filesMatching('pack.mcmeta') {
@@ -37,7 +51,11 @@ processResources {
     }
 }
 
-// Set duplicates strategy for sourcesJar to avoid conflicts
+// Common module only provides sources to platform modules — no jar remapping needed.
+tasks.named('remapJar') {
+    enabled = false
+}
+
 tasks.named('sourcesJar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

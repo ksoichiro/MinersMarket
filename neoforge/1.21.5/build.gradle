@@ -1,18 +1,48 @@
 plugins {
-    id 'com.gradleup.shadow'
+    id 'net.neoforged.moddev'
 }
 
-architectury {
-    platformSetupLoomIde()
-    neoForge()
+neoForge {
+    version = neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        minersmarket {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 configurations {
-    common
-    shadowCommon
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    developmentNeoForge.extendsFrom common
+    commonJava {
+        canBeResolved = true
+    }
+    commonResources {
+        canBeResolved = true
+    }
+}
+
+dependencies {
+    compileOnly project(':common')
+    // Common sources reference the TOML config library; NeoForge ships night-config
+    // at runtime, so it is only needed on the compile classpath here.
+    compileOnly "com.electronwill.night-config:core:3.8.3"
+    compileOnly "com.electronwill.night-config:toml:3.8.3"
+    // Common client-only classes use Fabric's @Environment annotation (previously
+    // remapped by Architectury). Provide it on the compile classpath only;
+    // it is CLASS-retention and ignored by NeoForge at runtime.
+    compileOnly "net.fabricmc:fabric-loader:${fabric_loader_version}"
+
+    commonJava project(path: ':common', configuration: 'commonJava')
+    commonResources project(path: ':common', configuration: 'commonResources')
 }
 
 sourceSets {
@@ -31,87 +61,38 @@ sourceSets {
     }
 }
 
-def commonModule = ':common-1.21.5'
-
-loom {
-    accessWidenerPath = project(commonModule).loom.accessWidenerPath
-
-    runs {
-        client {
-            client()
-            setConfigName("NeoForge Client")
-            ideConfigGenerated(true)
-            runDir("run")
-        }
-        server {
-            server()
-            setConfigName("NeoForge Server")
-            ideConfigGenerated(true)
-            runDir("run")
-        }
-    }
+tasks.named('compileJava') {
+    dependsOn configurations.commonJava
+    source configurations.commonJava
 }
 
-dependencies {
-    neoForge "net.neoforged:neoforge:${neoforge_version}"
-    common(project(path: commonModule, configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: commonModule, configuration: "transformProductionNeoForge")) { transitive false }
-}
-
-tasks.named("processResources", ProcessResources).configure {
+tasks.named('processResources') {
+    dependsOn configurations.commonResources
+    from configurations.commonResources
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    inputs.property "version", project.version
+    inputs.property 'version', project.version
 
-    filesMatching("META-INF/neoforge.mods.toml") {
-        expand "version": project.version
-    }
-
-    from(project(commonModule).sourceSets.main.resources) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        exclude "fabric.mod.json"
-        exclude "architectury.common.json"
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version
     }
 }
 
-tasks.named("shadowJar", com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configure {
-    exclude "fabric.mod.json"
-    exclude "architectury.common.json"
-
-    configurations = [project.configurations.shadowCommon]
-    archiveClassifier = "dev-shadow"
-}
-
-tasks.named("remapJar").configure {
-    inputFile.set tasks.named("shadowJar").flatMap { it.archiveFile }
-    dependsOn tasks.named("shadowJar")
+jar {
     archiveBaseName = rootProject.archives_name
-    archiveVersion = "${rootProject.mod_version}+${rootProject.ext.minecraft_version}-neoforge"
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-neoforge"
     archiveClassifier = null
 }
 
-tasks.named("jar").configure {
-    archiveClassifier = "dev"
-}
-
-tasks.named("sourcesJar").configure {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    def commonSources = project(commonModule).tasks.named("sourcesJar")
-    dependsOn commonSources
-    from commonSources.flatMap { it.archiveFile }.map { zipTree(it) }
+sourcesJar {
     archiveBaseName = rootProject.archives_name
-    archiveVersion = "${rootProject.mod_version}+${rootProject.ext.minecraft_version}-neoforge"
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
+    archiveVersion = "${rootProject.mod_version}+${minecraft_version}-neoforge"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 publishing {
     publications {
         mavenNeoForge(MavenPublication) {
-            artifactId = "${archives_name}-neoforge"
+            artifactId = "${rootProject.archives_name}-neoforge"
             from components.java
         }
     }

@@ -1,9 +1,5 @@
-architectury {
-    common rootProject.ext.enabled_platforms.split(',')
-}
-
-loom {
-    //accessWidenerPath = file("src/main/resources/minersmarket.accesswidener")
+plugins {
+    id 'fabric-loom'
 }
 
 sourceSets {
@@ -12,83 +8,86 @@ sourceSets {
             srcDir 'src/main/java'
             srcDir '../shared/src/main/java'
         }
-        resources {
-            srcDir 'build/generated/nbt'
-        }
     }
 }
 
 dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     compileOnly "com.electronwill.night-config:core:3.8.3"
     compileOnly "com.electronwill.night-config:toml:3.8.3"
-
-    testImplementation "com.electronwill.night-config:core:3.8.3"
-    testImplementation "com.electronwill.night-config:toml:3.8.3"
-
 }
 
-// NBT Structure Multi-Version Conversion
-// Converts 1.21.1 NBT structure files to 1.20.1 format (DataVersion update + directory rename)
-tasks.register('convertNbtStructures', Exec) {
+// NBT Structure Multi-Version Conversion (1.21.1 -> 1.20.1).
+//
+// The 1.21.1 structure files (singular 'structure' dir) are converted into 1.20.1
+// format and emitted under the 1.20.1 'structures' (plural) data path. Item data
+// carried by containers/entities (e.g. item frames, merchant equipment) uses the
+// 1.21.1 component format and is rewritten to the 1.20.1 legacy tag format by the
+// shared Querz-NBT-based converter (compiled via buildSrc). Pure Groovy/Java — no
+// Python required.
+def nbtInputDir = rootProject.file('common/1.21.1/src/main/resources/data/minersmarket/structure')
+def nbtOutputDir = file('build/generated/nbt/data/minersmarket/structures')
+
+tasks.register('convertNbt') {
     group = 'build'
     description = 'Convert NBT structure files from 1.21.1 to 1.20.1 format'
 
-    onlyIf {
-        project.ext.minecraft_version == '1.20.1'
-    }
+    inputs.dir(nbtInputDir).optional()
+    outputs.dir(nbtOutputDir)
 
-    // 1.21.1 uses 'structure' (singular), 1.20.1 uses 'structures' (plural)
-    def inputDir = rootProject.file('common/1.21.1/src/main/resources/data/minersmarket/structure')
-    def outputDir = file('build/generated/nbt/data/minersmarket/structures')
-    def scriptPath = rootProject.file('scripts/convert_nbt_1_21_to_1_20.py')
-
-    inputs.dir(inputDir).optional()
-    inputs.file(scriptPath)
-    outputs.dir(outputDir)
-
-    doFirst {
-        try {
-            exec {
-                commandLine 'python3', '-c', 'import nbtlib'
-                standardOutput = new ByteArrayOutputStream()
-                errorOutput = new ByteArrayOutputStream()
-            }
-        } catch (Exception e) {
-            throw new GradleException(
-                'Python 3 with nbtlib is required for NBT conversion. ' +
-                'Install with: pip3 install nbtlib'
-            )
-        }
-
-        if (!inputDir.exists()) {
-            logger.warn("Input directory does not exist: ${inputDir}")
-            logger.warn("Skipping NBT conversion")
+    doLast {
+        if (!nbtInputDir.exists()) {
+            logger.lifecycle("NBT conversion: input directory does not exist, skipping: ${nbtInputDir}")
             return
         }
-
-        if (!scriptPath.exists()) {
-            throw new GradleException("NBT conversion script not found: ${scriptPath}")
+        def nbtFiles = fileTree(dir: nbtInputDir, includes: ['**/*.nbt']).files
+        if (nbtFiles.isEmpty()) {
+            logger.lifecycle("NBT conversion: no .nbt files found in ${nbtInputDir}")
+            return
         }
-
-        logger.lifecycle('')
-        logger.lifecycle('Converting NBT structures from 1.21.1 to 1.20.1 format...')
-        logger.lifecycle("  Input:  ${inputDir}")
-        logger.lifecycle("  Output: ${outputDir}")
-        logger.lifecycle('')
+        def converter = new com.github.ksoichiro.mcmod.V1_21ToV1_20NbtConverter()
+        def targetDataVersion = 3465 // MC 1.20.1
+        nbtOutputDir.mkdirs()
+        nbtFiles.each { File f ->
+            def rel = nbtInputDir.toPath().relativize(f.toPath()).toString()
+            def out = new File(nbtOutputDir, rel)
+            out.parentFile.mkdirs()
+            out.bytes = converter.convert(f.bytes, targetDataVersion)
+        }
+        logger.lifecycle("NBT conversion: converted ${nbtFiles.size()} structure file(s) from 1.21.1 to 1.20.1")
     }
-
-    commandLine 'python3', scriptPath.absolutePath, '--batch', inputDir.absolutePath, outputDir.absolutePath
 }
 
-// Run NBT conversion before processing resources
-processResources.dependsOn convertNbtStructures
+processResources.dependsOn convertNbt
+
+// Expose sources and resources to the platform modules.
+// The generated-NBT resource dir is built by convertNbt, so consumers
+// (fabric/forge) trigger the conversion when they resolve commonResources.
+configurations {
+    commonJava {
+        canBeConsumed = true
+        canBeResolved = false
+    }
+    commonResources {
+        canBeConsumed = true
+        canBeResolved = false
+    }
+}
+
+artifacts {
+    sourceSets.main.java.srcDirs.each { dir -> commonJava dir }
+    sourceSets.main.resources.srcDirs.each { dir -> commonResources dir }
+    commonResources(file('build/generated/nbt')) { builtBy 'convertNbt' }
+}
 
 // Expand pack_format variable in pack.mcmeta
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property 'pack_format', project.ext.pack_format
 
     filesMatching('pack.mcmeta') {
@@ -96,8 +95,12 @@ processResources {
     }
 }
 
-// Set duplicates strategy for sourcesJar to avoid conflicts
+// Common module only provides sources to platform modules — no jar remapping needed.
+tasks.named('remapJar') {
+    enabled = false
+}
+
 tasks.named('sourcesJar') {
-    dependsOn convertNbtStructures
+    dependsOn convertNbt
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
