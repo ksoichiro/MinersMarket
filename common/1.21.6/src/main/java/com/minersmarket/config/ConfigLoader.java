@@ -35,20 +35,6 @@ public final class ConfigLoader {
     private static final String K_MARKET = "market";
     private static final String K_GENERATE_ON_WORLD_LOAD = "generate_on_world_load";
 
-    private static final long MIN_TARGET_SALES = 1L;
-    private static final int MIN_COUNTDOWN_SECONDS = 0;
-    private static final int MAX_COUNTDOWN_SECONDS = 300;
-    private static final int MIN_INTERVAL_SECONDS = 1;
-    private static final int MIN_DURATION_SECONDS = 1;
-    private static final int MIN_CHANGE_PERCENT = 0;
-    // Large chest holds 54 slots; each player takes one pickaxe slot and one bread slot.
-    private static final int MIN_PLAYER_COUNT = 0;
-    private static final int MAX_PLAYER_COUNT = 27;
-    private static final int MIN_BREAD_COUNT = 1;
-    private static final int MAX_BREAD_COUNT = 64;
-    private static final int MIN_FORTUNE_LEVEL = 0;
-    private static final int MAX_FORTUNE_LEVEL = 255;
-
     private ConfigLoader() {
     }
 
@@ -112,37 +98,37 @@ public final class ConfigLoader {
                 parsed,
                 K_GAME + "." + K_TARGET_SALES,
                 ConfigDefaults.GAME_TARGET_SALES,
-                MIN_TARGET_SALES,
-                Long.MAX_VALUE
+                ConfigRanges.MIN_TARGET_SALES,
+                ConfigRanges.MAX_TARGET_SALES
         );
         int countdownSeconds = readInt(
                 parsed,
                 K_GAME + "." + K_COUNTDOWN_SECONDS,
                 ConfigDefaults.GAME_COUNTDOWN_SECONDS,
-                MIN_COUNTDOWN_SECONDS,
-                MAX_COUNTDOWN_SECONDS
+                ConfigRanges.MIN_COUNTDOWN_SECONDS,
+                ConfigRanges.MAX_COUNTDOWN_SECONDS
         );
 
         int intervalSeconds = readInt(
                 parsed,
                 K_PRICE_EVENT + "." + K_INTERVAL_SECONDS,
                 ConfigDefaults.PRICE_EVENT_INTERVAL_SECONDS,
-                MIN_INTERVAL_SECONDS,
-                Integer.MAX_VALUE
+                ConfigRanges.MIN_INTERVAL_SECONDS,
+                ConfigRanges.MAX_INTERVAL_SECONDS
         );
         int durationMinSeconds = readInt(
                 parsed,
                 K_PRICE_EVENT + "." + K_DURATION_MIN_SECONDS,
                 ConfigDefaults.PRICE_EVENT_DURATION_MIN_SECONDS,
-                MIN_DURATION_SECONDS,
-                Integer.MAX_VALUE
+                ConfigRanges.MIN_DURATION_SECONDS,
+                ConfigRanges.MAX_DURATION_SECONDS
         );
         int durationMaxSeconds = readInt(
                 parsed,
                 K_PRICE_EVENT + "." + K_DURATION_MAX_SECONDS,
                 ConfigDefaults.PRICE_EVENT_DURATION_MAX_SECONDS,
-                MIN_DURATION_SECONDS,
-                Integer.MAX_VALUE
+                ConfigRanges.MIN_DURATION_SECONDS,
+                ConfigRanges.MAX_DURATION_SECONDS
         );
         if (durationMaxSeconds < durationMinSeconds) {
             LOGGER.error("Invalid {}: {}.{} ({}) must be >= {}.{} ({}); using defaults {} and {}",
@@ -156,15 +142,15 @@ public final class ConfigLoader {
                 parsed,
                 K_PRICE_EVENT + "." + K_CHANGE_MIN_PERCENT,
                 ConfigDefaults.PRICE_EVENT_CHANGE_MIN_PERCENT,
-                MIN_CHANGE_PERCENT,
-                Integer.MAX_VALUE
+                ConfigRanges.MIN_CHANGE_PERCENT,
+                ConfigRanges.MAX_CHANGE_PERCENT
         );
         int changeMaxPercent = readInt(
                 parsed,
                 K_PRICE_EVENT + "." + K_CHANGE_MAX_PERCENT,
                 ConfigDefaults.PRICE_EVENT_CHANGE_MAX_PERCENT,
-                MIN_CHANGE_PERCENT,
-                Integer.MAX_VALUE
+                ConfigRanges.MIN_CHANGE_PERCENT,
+                ConfigRanges.MAX_CHANGE_PERCENT
         );
         if (changeMaxPercent < changeMinPercent) {
             LOGGER.error("Invalid {}: {}.{} ({}) must be >= {}.{} ({}); using defaults {} and {}",
@@ -184,22 +170,22 @@ public final class ConfigLoader {
                 parsed,
                 K_STARTER_ITEMS + "." + K_PLAYER_COUNT,
                 ConfigDefaults.STARTER_ITEMS_PLAYER_COUNT,
-                MIN_PLAYER_COUNT,
-                MAX_PLAYER_COUNT
+                ConfigRanges.MIN_PLAYER_COUNT,
+                ConfigRanges.MAX_PLAYER_COUNT
         );
         int breadCount = readInt(
                 parsed,
                 K_STARTER_ITEMS + "." + K_BREAD_COUNT,
                 ConfigDefaults.STARTER_ITEMS_BREAD_COUNT,
-                MIN_BREAD_COUNT,
-                MAX_BREAD_COUNT
+                ConfigRanges.MIN_BREAD_COUNT,
+                ConfigRanges.MAX_BREAD_COUNT
         );
         int pickaxeFortuneLevel = readInt(
                 parsed,
                 K_STARTER_ITEMS + "." + K_PICKAXE_FORTUNE_LEVEL,
                 ConfigDefaults.STARTER_ITEMS_PICKAXE_FORTUNE_LEVEL,
-                MIN_FORTUNE_LEVEL,
-                MAX_FORTUNE_LEVEL
+                ConfigRanges.MIN_FORTUNE_LEVEL,
+                ConfigRanges.MAX_FORTUNE_LEVEL
         );
 
         for (CommentedConfig.Entry entry : parsed.entrySet()) {
