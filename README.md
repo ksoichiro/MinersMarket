@@ -149,6 +149,22 @@ Reloading affects future behavior only — it does not rewrite an already-genera
 or change the target of an in-progress game. The market can also be (re)generated manually
 with `/minersmarket market generate`.
 
+### In-Game Config Screen
+
+All settings can also be edited from an in-game screen (built with vanilla widgets — no
+extra mods required):
+
+- **NeoForge / Forge**: Mods list → Miner's Market → **Config** button
+- **Fabric**: mod list entry via [ModMenu](https://modrinth.com/mod/modmenu), if installed
+  (optional — the mod does not depend on it)
+- **Any platform**: bind the "Open Config Screen" key (unbound by default, under the
+  "Miner's Market" key-binding category) and press it in game
+
+The screen validates input against the same rules as the file loader and writes changes
+back to your local `minersmarket.toml`, preserving comments. Changes apply immediately,
+with the same semantics as `/minersmarket config reload`. In multiplayer, this edits the
+local file only — dedicated servers are still configured server-side as described above.
+
 ### Settings
 
 | Key | Default | Description |

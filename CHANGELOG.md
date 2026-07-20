@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- In-game config screen built with vanilla widgets (no extra dependencies)
+  - Opens from the mod list: Config button on NeoForge/Forge, ModMenu entry on Fabric (when ModMenu is installed)
+  - Key binding "Open Config Screen" (unbound by default, category "Miner's Market")
+  - Edits all `minersmarket.toml` settings with validation, tooltips, and Reset to Defaults
+  - Saves to the local config file preserving comments and applies immediately (same semantics as `/minersmarket config reload`)
+
 ## [0.4.0]
 
 ### Added
