@@ -30,8 +30,8 @@ public class ConfigScreen extends Screen {
     private static final int ITEM_HEIGHT = 25;
     private static final int WIDGET_WIDTH = 100;
     private static final int WIDGET_HEIGHT = 20;
-    private static final int VALID_TEXT_COLOR = 0xE0E0E0;
-    private static final int INVALID_TEXT_COLOR = 0xFF5555;
+    private static final int VALID_TEXT_COLOR = 0xFFE0E0E0;
+    private static final int INVALID_TEXT_COLOR = 0xFFFF5555;
 
     private final Screen parent;
     private SettingsList list;
@@ -231,7 +231,7 @@ public class ConfigScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.centeredText(this.font, this.title, this.width / 2, 12, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
     }
 
     @Override
@@ -269,7 +269,7 @@ public class ConfigScreen extends Screen {
 
         @Override
         public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovering, float partialTick) {
-            guiGraphics.centeredText(this.font, this.label, getX() + getWidth() / 2, getY() + 7, 0xFFFF55);
+            guiGraphics.centeredText(this.font, this.label, getX() + getWidth() / 2, getY() + 7, 0xFFFFFF55);
         }
 
         @Override
@@ -350,7 +350,7 @@ public class ConfigScreen extends Screen {
 
         @Override
         public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovering, float partialTick) {
-            guiGraphics.text(this.font, this.label, getX(), getY() + 6, 0xFFFFFF);
+            guiGraphics.text(this.font, this.label, getX(), getY() + 6, 0xFFFFFFFF);
             this.editBox.setPosition(getX() + getWidth() - WIDGET_WIDTH, getY());
             this.editBox.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -391,7 +391,7 @@ public class ConfigScreen extends Screen {
 
         @Override
         public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovering, float partialTick) {
-            guiGraphics.text(this.font, this.label, getX(), getY() + 6, 0xFFFFFF);
+            guiGraphics.text(this.font, this.label, getX(), getY() + 6, 0xFFFFFFFF);
             this.button.setPosition(getX() + getWidth() - WIDGET_WIDTH, getY());
             this.button.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         }
