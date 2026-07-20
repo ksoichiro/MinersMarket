@@ -39,6 +39,22 @@ sourceSets {
     }
 }
 
+// Optional ModMenu integration: compile-time only, and only for versions where
+// props/<version>.properties declares modmenu_version.
+if (project.hasProperty('modmenu_version')) {
+    repositories {
+        maven {
+            name = 'Modrinth'
+            url = 'https://api.modrinth.com/maven'
+            content { includeGroup 'maven.modrinth' }
+        }
+    }
+    dependencies {
+        modCompileOnly "maven.modrinth:modmenu:${modmenu_version}"
+    }
+    sourceSets.main.java.srcDir '../base-modmenu/src/main/java'
+}
+
 tasks.named('compileJava') {
     dependsOn configurations.commonJava
     source configurations.commonJava

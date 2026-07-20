@@ -13,7 +13,11 @@ import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.ClientGameState;
+import com.minersmarket.config.client.ConfigScreen;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.netty.buffer.Unpooled;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -26,9 +30,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -37,6 +43,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -196,5 +203,31 @@ public class ForgePlatform {
             ClientGameState.reset();
             GameHudOverlay.clearFloatingTexts();
         });
+
+        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> new ConfigScreen(parent)));
+        ClientConfigHooks.register(modBus);
+    }
+
+    // Client-only members isolated in a holder class: KeyMapping must not be
+    // class-loaded on a dedicated server.
+    private static final class ClientConfigHooks {
+        private static final KeyMapping OPEN_CONFIG_KEY = new KeyMapping(
+                "key.minersmarket.open_config",
+                InputConstants.UNKNOWN.getValue(),
+                "key.categories.minersmarket");
+
+        static void register(IEventBus modBus) {
+            modBus.addListener((RegisterKeyMappingsEvent event) -> event.register(OPEN_CONFIG_KEY));
+            MinecraftForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
+                if (event.phase != TickEvent.Phase.END) {
+                    return;
+                }
+                Minecraft minecraft = Minecraft.getInstance();
+                while (OPEN_CONFIG_KEY.consumeClick()) {
+                    minecraft.setScreen(new ConfigScreen(minecraft.screen));
+                }
+            });
+        }
     }
 }
