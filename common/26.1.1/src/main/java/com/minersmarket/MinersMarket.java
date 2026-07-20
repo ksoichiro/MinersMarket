@@ -28,6 +28,10 @@ public class MinersMarket {
         LOGGER.info("Miner's Market initialized");
     }
 
+    public static Path getConfigDir() {
+        return configDir;
+    }
+
     public static void onServerLevelLoad(ServerLevel level) {
         if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
             GameStateManager.init(level);

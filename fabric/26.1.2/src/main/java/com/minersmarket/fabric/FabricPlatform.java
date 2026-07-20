@@ -13,7 +13,9 @@ import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.ClientGameState;
+import com.minersmarket.config.client.ConfigScreen;
 import io.netty.buffer.Unpooled;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -24,11 +26,14 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -168,6 +173,18 @@ public class FabricPlatform {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientGameState.reset();
             GameHudOverlay.clearFloatingTexts();
+        });
+
+        KeyMapping.Category category = new KeyMapping.Category(
+                Identifier.fromNamespaceAndPath(MinersMarket.MOD_ID, "main"));
+        KeyMapping openConfigKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.minersmarket.open_config",
+                InputConstants.UNKNOWN.getValue(),
+                category));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (openConfigKey.consumeClick()) {
+                client.setScreen(new ConfigScreen(client.screen));
+            }
         });
     }
 }
