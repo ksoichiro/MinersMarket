@@ -19,6 +19,9 @@
     ],
     "client": [
       "com.minersmarket.fabric.client.MinersMarketFabricClient"
+    ],
+    "modmenu": [
+      "com.minersmarket.fabric.client.ModMenuIntegration"
     ]
   },
   "depends": {
