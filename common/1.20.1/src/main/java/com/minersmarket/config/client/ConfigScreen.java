@@ -255,6 +255,13 @@ public class ConfigScreen extends Screen {
         }
 
         @Override
+        protected int getScrollbarPosition() {
+            // Default (this.width / 2 + 124) falls inside the wider ROW_WIDTH row and
+            // overlaps the right-aligned widgets; push the scrollbar past the row edge.
+            return this.width / 2 + ROW_WIDTH / 2 + 10;
+        }
+
+        @Override
         public int addEntry(ConfigScreen.Entry entry) {
             return super.addEntry(entry);
         }
