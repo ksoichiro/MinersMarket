@@ -13,12 +13,16 @@ import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.ClientGameState;
+import com.minersmarket.config.client.ConfigScreen;
 import io.netty.buffer.Unpooled;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -28,6 +32,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -149,6 +154,16 @@ public class FabricPlatform {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientGameState.reset();
             GameHudOverlay.clearFloatingTexts();
+        });
+
+        KeyMapping openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.minersmarket.open_config",
+                InputConstants.UNKNOWN.getValue(),
+                "key.categories.minersmarket"));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (openConfigKey.consumeClick()) {
+                client.setScreen(new ConfigScreen(client.screen));
+            }
         });
     }
 }

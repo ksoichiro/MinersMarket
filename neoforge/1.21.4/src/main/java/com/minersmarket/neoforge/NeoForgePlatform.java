@@ -1,6 +1,7 @@
 package com.minersmarket.neoforge;
 
 import com.minersmarket.MinersMarket;
+import com.minersmarket.config.client.ConfigScreen;
 import com.minersmarket.entity.MerchantEntity;
 import com.minersmarket.entity.MerchantEntityRenderer;
 import com.minersmarket.entity.MerchantModel;
@@ -13,7 +14,10 @@ import com.minersmarket.registry.ModCreativeTab;
 import com.minersmarket.registry.ModEntityTypes;
 import com.minersmarket.registry.ModItems;
 import com.minersmarket.state.ClientGameState;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.netty.buffer.Unpooled;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -28,9 +32,13 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -157,7 +165,7 @@ public class NeoForgePlatform {
                 MinersMarket.registerCommands(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection()));
     }
 
-    public static void registerClient(IEventBus modBus) {
+    public static void registerClient(IEventBus modBus, ModContainer container) {
         ClientGameState.setOnSaleCallback(GameHudOverlay::addFloatingText);
         modBus.addListener((EntityRenderersEvent.RegisterRenderers event) ->
                 event.registerEntityRenderer(MERCHANT.get(), MerchantEntityRenderer::new));
@@ -171,5 +179,28 @@ public class NeoForgePlatform {
             ClientGameState.reset();
             GameHudOverlay.clearFloatingTexts();
         });
+
+        container.registerExtensionPoint(IConfigScreenFactory.class,
+                (ignored, parent) -> new ConfigScreen(parent));
+        ClientConfigHooks.register(modBus);
+    }
+
+    // Client-only members isolated in a holder class: KeyMapping must not be
+    // class-loaded on a dedicated server.
+    private static final class ClientConfigHooks {
+        private static final KeyMapping OPEN_CONFIG_KEY = new KeyMapping(
+                "key.minersmarket.open_config",
+                InputConstants.UNKNOWN.getValue(),
+                "key.categories.minersmarket");
+
+        static void register(IEventBus modBus) {
+            modBus.addListener((RegisterKeyMappingsEvent event) -> event.register(OPEN_CONFIG_KEY));
+            NeoForge.EVENT_BUS.addListener((ClientTickEvent.Post event) -> {
+                Minecraft minecraft = Minecraft.getInstance();
+                while (OPEN_CONFIG_KEY.consumeClick()) {
+                    minecraft.setScreen(new ConfigScreen(minecraft.screen));
+                }
+            });
+        }
     }
 }
