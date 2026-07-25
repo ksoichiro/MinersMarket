@@ -4,10 +4,11 @@ public record MinersMarketConfig(
         int schemaVersion,
         Game game,
         PriceEvent priceEvent,
+        ScoreDisplay scoreDisplay,
         StarterItems starterItems,
         Market market
 ) {
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
 
     private static volatile MinersMarketConfig INSTANCE = ConfigDefaults.defaults();
 
@@ -19,7 +20,7 @@ public record MinersMarketConfig(
         INSTANCE = config;
     }
 
-    public record Game(long targetSales, int countdownSeconds) {
+    public record Game(GameMode mode, long targetSales, int timeLimitSeconds, int countdownSeconds) {
     }
 
     public record PriceEvent(
@@ -29,6 +30,9 @@ public record MinersMarketConfig(
             int changeMinPercent,
             int changeMaxPercent
     ) {
+    }
+
+    public record ScoreDisplay(boolean alwaysShow, int hideRemainingSeconds) {
     }
 
     public record StarterItems(
