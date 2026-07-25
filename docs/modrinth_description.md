@@ -60,6 +60,7 @@ Sell your mined items to the merchant for gold:
 ### 🛠️ Server Configuration
 - **TOML Config**: Tune gameplay in `config/minersmarket.toml` (server-side only — no client setup needed)
 - **Live Reload**: Apply changes on a running server with `/minersmarket config reload`
+- **In-Game Config Screen**: Edit all settings from a built-in screen (Mods list, ModMenu, or a key binding) — applies to the world you host
 - **Tunable Values**: Win target, start countdown, price event timing and magnitude, and starter items
 
 ---

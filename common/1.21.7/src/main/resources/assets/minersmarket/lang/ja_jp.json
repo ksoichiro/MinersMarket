@@ -55,6 +55,8 @@
   "config.minersmarket.valid_range": "有効範囲: %s 〜 %s",
   "config.minersmarket.valid_min": "最小値: %s",
   "config.minersmarket.reset": "デフォルトに戻す",
+  "config.minersmarket.note_local": "ローカル設定です。自分がホストするワールドに適用されます",
+  "config.minersmarket.note_not_host": "ホストではないため、この変更は現在のワールドに反映されません",
   "key.minersmarket.open_config": "設定画面を開く",
   "key.categories.minersmarket": "Miner's Market"
 }

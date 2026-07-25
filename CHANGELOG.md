@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   - Key binding "Open Config Screen" (unbound by default, category "Miner's Market")
   - Edits all `minersmarket.toml` settings with validation, tooltips, and Reset to Defaults
   - Saves to the local config file preserving comments and applies immediately (same semantics as `/minersmarket config reload`)
+  - Shows a notice that the settings are local, with a warning when connected to a world hosted by another player
 
 ## [0.4.0]
 

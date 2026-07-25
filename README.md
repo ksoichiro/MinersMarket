@@ -164,6 +164,9 @@ The screen validates input against the same rules as the file loader and writes 
 back to your local `minersmarket.toml`, preserving comments. Changes apply immediately,
 with the same semantics as `/minersmarket config reload`. In multiplayer, this edits the
 local file only — dedicated servers are still configured server-side as described above.
+When you open the screen while connected to a world hosted by someone else, the values shown
+are your own local ones rather than the host's, and editing them has no effect on that
+session; the screen displays a notice saying so.
 
 ### Settings
 

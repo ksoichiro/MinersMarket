@@ -32,6 +32,9 @@ public class ConfigScreen extends Screen {
     private static final int WIDGET_HEIGHT = 20;
     private static final int VALID_TEXT_COLOR = 0xFFE0E0E0;
     private static final int INVALID_TEXT_COLOR = 0xFFFF5555;
+    private static final int HEADER_TEXT_COLOR = 0xFFFFFF55;
+    private static final int NOTE_TEXT_COLOR = 0xFFAAAAAA;
+    private static final int NOTE_WARN_COLOR = 0xFFFFAA00;
 
     private final Screen parent;
     private SettingsList list;
@@ -62,6 +65,13 @@ public class ConfigScreen extends Screen {
         // bounds instead of a height + top offset pair (1.21.1's signature).
         this.list = new SettingsList(this.minecraft, this.width, this.height,
                 LIST_TOP, this.height - FOOTER_HEIGHT, ITEM_HEIGHT);
+
+        boolean joinedRemoteWorld = isJoinedRemoteWorld();
+        this.list.addEntry(new HeaderEntry(this.font,
+                Component.translatable(joinedRemoteWorld
+                        ? "config.minersmarket.note_not_host"
+                        : "config.minersmarket.note_local"),
+                joinedRemoteWorld ? NOTE_WARN_COLOR : NOTE_TEXT_COLOR));
 
         this.list.addEntry(new HeaderEntry(this.font, Component.translatable("config.minersmarket.category.game")));
         this.targetSales = addNumberRow("target_sales", String.valueOf(config.game().targetSales()),
@@ -128,6 +138,15 @@ public class ConfigScreen extends Screen {
                 ? Component.translatable("config.minersmarket.valid_min", min)
                 : Component.translatable("config.minersmarket.valid_range", min, max);
         return Component.translatable(tooltipKey).append("\n").append(range);
+    }
+
+    // The config is read only by server-side logic from the local file, and nothing
+    // syncs it over the network. On a world hosted by someone else these values are the
+    // player's own and do not affect that session, so the notice must say which case
+    // the player is in. Singleplayer and LAN hosting both keep an integrated server.
+    private boolean isJoinedRemoteWorld() {
+        return this.minecraft != null && this.minecraft.level != null
+                && !this.minecraft.hasSingleplayerServer();
     }
 
     private void updateDoneButton() {
@@ -273,16 +292,22 @@ public class ConfigScreen extends Screen {
     static class HeaderEntry extends Entry {
         private final Font font;
         private final Component label;
+        private final int color;
 
         HeaderEntry(Font font, Component label) {
+            this(font, label, HEADER_TEXT_COLOR);
+        }
+
+        HeaderEntry(Font font, Component label, int color) {
             this.font = font;
             this.label = label;
+            this.color = color;
         }
 
         @Override
         public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
-            guiGraphics.drawCenteredString(this.font, this.label, left + width / 2, top + 7, 0xFFFFFF55);
+            guiGraphics.drawCenteredString(this.font, this.label, left + width / 2, top + 7, this.color);
         }
 
         @Override

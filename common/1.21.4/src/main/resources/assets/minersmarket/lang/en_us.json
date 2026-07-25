@@ -55,6 +55,8 @@
   "config.minersmarket.valid_range": "Valid range: %s - %s",
   "config.minersmarket.valid_min": "Minimum: %s",
   "config.minersmarket.reset": "Reset to Defaults",
+  "config.minersmarket.note_local": "Local settings: applied to worlds you host.",
+  "config.minersmarket.note_not_host": "Not the host: changes won't affect this world.",
   "key.minersmarket.open_config": "Open Config Screen",
   "key.categories.minersmarket": "Miner's Market"
 }
