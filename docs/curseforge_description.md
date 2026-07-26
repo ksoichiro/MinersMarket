@@ -52,16 +52,17 @@ Sell your mined items to the merchant for gold:
 - **Price Event Status**: See when a price event is active and the current price multiplier
 
 ### 🎮 Game Flow
-- **Game Start Block**: Press to begin a 5-second countdown, then the race starts
+- **Game Start Block**: Press to begin a 5-second countdown, then the game starts
+- **Two Game Modes**: Race to a target amount, or play to a time limit where the highest earner when the clock runs out wins
 - **Game Reset Block**: Double-click within 5 seconds to reset the game
 - **Night Vision**: All players receive permanent night vision for mining
-- **Victory Notifications**: Announcements when players reach the goal
+- **Victory Notifications**: Announcements when players reach the goal (target mode) or when time runs out (time-limit mode)
 
 ### 🛠️ Server Configuration
 - **TOML Config**: Tune gameplay in `config/minersmarket.toml` (server-side only — no client setup needed)
 - **Live Reload**: Apply changes on a running server with `/minersmarket config reload`
 - **In-Game Config Screen**: Edit all settings from a built-in screen (Mods list, ModMenu, or a key binding) — applies to the world you host
-- **Tunable Values**: Win target, start countdown, price event timing and magnitude, and starter items
+- **Tunable Values**: Game mode and win target or time limit, score display visibility, start countdown, price event timing and magnitude, and starter items
 
 ---
 

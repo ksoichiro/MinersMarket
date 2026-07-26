@@ -14,6 +14,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   - Edits all `minersmarket.toml` settings with validation, tooltips, and Reset to Defaults
   - Saves to the local config file preserving comments and applies immediately (same semantics as `/minersmarket config reload`)
   - Shows a notice that the settings are local, with a warning when connected to a world hosted by another player
+- Time-limit game mode: the player with the highest sales when the timer expires wins
+  (`game.mode = "time_limit"`, `game.time_limit_seconds`).
+- Score display settings for time-limit mode (`score_display.always_show`,
+  `score_display.hide_remaining_seconds`): show the full ranking during the game, and
+  optionally hide it once the remaining time drops below a threshold.
+- Game mode, time limit and score display rows on the in-game config screen.
+
+### Changed
+
+- Config schema version is now `2`. Existing `minersmarket.toml` files load unchanged and
+  keep the previous target-amount behaviour.
 
 ## [0.4.0]
 

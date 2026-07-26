@@ -9,6 +9,7 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Features
 
 - **Competitive Mining**: Race against other players to be the first to earn 10,000 gold
+- **Two Game Modes**: Race to a target amount, or play to a time limit where the highest earner when the clock runs out wins (both [configurable](#server-configuration))
 - **NPC Merchant**: Sell your mined ores and ingots to a merchant NPC at the market
 - **Auto-Generated Market**: A market structure spawns automatically at the world spawn point
 - **Miner's Pickaxe**: A powerful custom pickaxe with Fortune III, high durability (4096), and fast mining speed
@@ -149,6 +150,10 @@ Reloading affects future behavior only — it does not rewrite an already-genera
 or change the target of an in-progress game. The market can also be (re)generated manually
 with `/minersmarket market generate`.
 
+The game mode and time limit are captured when a game starts, so changing them mid-game does
+not affect the game in progress — start a new game for them to take effect. The score-display
+settings are read continuously, so toggling them applies straight away.
+
 ### In-Game Config Screen
 
 All settings can also be edited from an in-game screen (built with vanilla widgets — no
@@ -172,13 +177,17 @@ session; the screen displays a notice saying so.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `game.target_sales` | `10000` | Gold a player must earn to win |
+| `game.mode` | `"target"` | Win condition: `"target"` (first to reach `target_sales`) or `"time_limit"` (highest sales when time runs out) |
+| `game.target_sales` | `10000` | Gold a player must earn to win (`target` mode only) |
+| `game.time_limit_seconds` | `1800` | Length of a game in seconds (`time_limit` mode only) |
 | `game.countdown_seconds` | `5` | Countdown length before a game starts (0–300) |
 | `price_event.interval_seconds` | `600` | Seconds to wait after a price event ends before the next can start |
 | `price_event.duration_min_seconds` | `180` | Minimum price event duration |
 | `price_event.duration_max_seconds` | `300` | Maximum price event duration (must be ≥ min) |
 | `price_event.change_min_percent` | `10` | Minimum price change percentage |
 | `price_event.change_max_percent` | `30` | Maximum price change percentage (must be ≥ min) |
+| `score_display.always_show` | `false` | Show every player's sales on the HUD during the game; when `false`, totals are revealed at time-up (`time_limit` mode only) |
+| `score_display.hide_remaining_seconds` | `300` | With `always_show` on, hide the ranking once this many seconds remain; `0` keeps it visible to the end |
 | `starter_items.enabled` | `true` | Whether the market chest is filled with starting equipment |
 | `starter_items.player_count` | `8` | Number of players to equip, one pickaxe and one bread stack each (0–27) |
 | `starter_items.bread_count` | `64` | Bread items per stack (1–64) |
