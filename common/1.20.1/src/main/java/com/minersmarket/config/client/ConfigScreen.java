@@ -4,6 +4,7 @@ import com.minersmarket.MinersMarket;
 import com.minersmarket.config.ConfigDefaults;
 import com.minersmarket.config.ConfigRanges;
 import com.minersmarket.config.ConfigWriter;
+import com.minersmarket.config.GameMode;
 import com.minersmarket.config.MinersMarketConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -40,18 +41,22 @@ public class ConfigScreen extends Screen {
     private SettingsList list;
     private Button doneButton;
 
+    private CycleEntry<GameMode> mode;
     private NumberEntry targetSales;
+    private NumberEntry timeLimitSeconds;
     private NumberEntry countdownSeconds;
     private NumberEntry intervalSeconds;
     private NumberEntry durationMinSeconds;
     private NumberEntry durationMaxSeconds;
     private NumberEntry changeMinPercent;
     private NumberEntry changeMaxPercent;
-    private ToggleEntry starterEnabled;
+    private CycleEntry<Boolean> scoreAlwaysShow;
+    private NumberEntry scoreHideRemainingSeconds;
+    private CycleEntry<Boolean> starterEnabled;
     private NumberEntry playerCount;
     private NumberEntry breadCount;
     private NumberEntry pickaxeFortuneLevel;
-    private ToggleEntry generateOnWorldLoad;
+    private CycleEntry<Boolean> generateOnWorldLoad;
 
     public ConfigScreen(Screen parent) {
         super(Component.translatable("config.minersmarket.title"));
@@ -74,10 +79,19 @@ public class ConfigScreen extends Screen {
                 joinedRemoteWorld ? NOTE_WARN_COLOR : NOTE_TEXT_COLOR));
 
         this.list.addEntry(new HeaderEntry(this.font, Component.translatable("config.minersmarket.category.game")));
+        this.mode = addModeRow("mode", config.game().mode());
         this.targetSales = addNumberRow("target_sales", String.valueOf(config.game().targetSales()),
                 ConfigRanges.MIN_TARGET_SALES, ConfigRanges.MAX_TARGET_SALES);
+        this.timeLimitSeconds = addNumberRow("time_limit_seconds", String.valueOf(config.game().timeLimitSeconds()),
+                ConfigRanges.MIN_TIME_LIMIT_SECONDS, ConfigRanges.MAX_TIME_LIMIT_SECONDS);
         this.countdownSeconds = addNumberRow("countdown_seconds", String.valueOf(config.game().countdownSeconds()),
                 ConfigRanges.MIN_COUNTDOWN_SECONDS, ConfigRanges.MAX_COUNTDOWN_SECONDS);
+
+        this.list.addEntry(new HeaderEntry(this.font, Component.translatable("config.minersmarket.category.score_display")));
+        this.scoreAlwaysShow = addToggleRow("score_always_show", config.scoreDisplay().alwaysShow());
+        this.scoreHideRemainingSeconds = addNumberRow("score_hide_remaining_seconds",
+                String.valueOf(config.scoreDisplay().hideRemainingSeconds()),
+                ConfigRanges.MIN_HIDE_REMAINING_SECONDS, ConfigRanges.MAX_HIDE_REMAINING_SECONDS);
 
         this.list.addEntry(new HeaderEntry(this.font, Component.translatable("config.minersmarket.category.price_event")));
         this.intervalSeconds = addNumberRow("interval_seconds", String.valueOf(config.priceEvent().intervalSeconds()),
@@ -124,8 +138,17 @@ public class ConfigScreen extends Screen {
         return entry;
     }
 
-    private ToggleEntry addToggleRow(String key, boolean initialValue) {
-        ToggleEntry entry = new ToggleEntry(this.font,
+    private CycleEntry<Boolean> addToggleRow(String key, boolean initialValue) {
+        CycleEntry<Boolean> entry = CycleEntry.ofBoolean(this.font,
+                Component.translatable("config.minersmarket.option." + key),
+                Component.translatable("config.minersmarket.option." + key + ".tooltip"),
+                initialValue);
+        this.list.addEntry(entry);
+        return entry;
+    }
+
+    private CycleEntry<GameMode> addModeRow(String key, GameMode initialValue) {
+        CycleEntry<GameMode> entry = CycleEntry.ofGameMode(this.font,
                 Component.translatable("config.minersmarket.option." + key),
                 Component.translatable("config.minersmarket.option." + key + ".tooltip"),
                 initialValue);
@@ -157,12 +180,14 @@ public class ConfigScreen extends Screen {
 
     private boolean validate() {
         boolean fieldsValid = this.targetSales.isValid()
+                & this.timeLimitSeconds.isValid()
                 & this.countdownSeconds.isValid()
                 & this.intervalSeconds.isValid()
                 & this.durationMinSeconds.isValid()
                 & this.durationMaxSeconds.isValid()
                 & this.changeMinPercent.isValid()
                 & this.changeMaxPercent.isValid()
+                & this.scoreHideRemainingSeconds.isValid()
                 & this.playerCount.isValid()
                 & this.breadCount.isValid()
                 & this.pickaxeFortuneLevel.isValid();
@@ -183,13 +208,17 @@ public class ConfigScreen extends Screen {
         }
         MinersMarketConfig config = new MinersMarketConfig(
                 MinersMarketConfig.CURRENT_SCHEMA_VERSION,
-                new MinersMarketConfig.Game(this.targetSales.longValue(), this.countdownSeconds.intValue()),
+                new MinersMarketConfig.Game(this.mode.getValue(), this.targetSales.longValue(),
+                        this.timeLimitSeconds.intValue(), this.countdownSeconds.intValue()),
                 new MinersMarketConfig.PriceEvent(
                         this.intervalSeconds.intValue(),
                         this.durationMinSeconds.intValue(),
                         this.durationMaxSeconds.intValue(),
                         this.changeMinPercent.intValue(),
                         this.changeMaxPercent.intValue()),
+                new MinersMarketConfig.ScoreDisplay(
+                        this.scoreAlwaysShow.getValue(),
+                        this.scoreHideRemainingSeconds.intValue()),
                 new MinersMarketConfig.StarterItems(
                         this.starterEnabled.getValue(),
                         this.playerCount.intValue(),
@@ -207,13 +236,17 @@ public class ConfigScreen extends Screen {
 
     private void resetToDefaults() {
         MinersMarketConfig defaults = ConfigDefaults.defaults();
+        this.mode.setValue(defaults.game().mode());
         this.targetSales.setValue(String.valueOf(defaults.game().targetSales()));
+        this.timeLimitSeconds.setValue(String.valueOf(defaults.game().timeLimitSeconds()));
         this.countdownSeconds.setValue(String.valueOf(defaults.game().countdownSeconds()));
         this.intervalSeconds.setValue(String.valueOf(defaults.priceEvent().intervalSeconds()));
         this.durationMinSeconds.setValue(String.valueOf(defaults.priceEvent().durationMinSeconds()));
         this.durationMaxSeconds.setValue(String.valueOf(defaults.priceEvent().durationMaxSeconds()));
         this.changeMinPercent.setValue(String.valueOf(defaults.priceEvent().changeMinPercent()));
         this.changeMaxPercent.setValue(String.valueOf(defaults.priceEvent().changeMaxPercent()));
+        this.scoreAlwaysShow.setValue(defaults.scoreDisplay().alwaysShow());
+        this.scoreHideRemainingSeconds.setValue(String.valueOf(defaults.scoreDisplay().hideRemainingSeconds()));
         this.starterEnabled.setValue(defaults.starterItems().enabled());
         this.playerCount.setValue(String.valueOf(defaults.starterItems().playerCount()));
         this.breadCount.setValue(String.valueOf(defaults.starterItems().breadCount()));
@@ -226,25 +259,33 @@ public class ConfigScreen extends Screen {
         // init() rebuilds every widget; snapshot unsaved edits so a window resize
         // does not silently discard them.
         String[] numbers = {
-                this.targetSales.getValue(), this.countdownSeconds.getValue(),
+                this.targetSales.getValue(), this.timeLimitSeconds.getValue(),
+                this.countdownSeconds.getValue(),
                 this.intervalSeconds.getValue(), this.durationMinSeconds.getValue(),
                 this.durationMaxSeconds.getValue(), this.changeMinPercent.getValue(),
-                this.changeMaxPercent.getValue(), this.playerCount.getValue(),
+                this.changeMaxPercent.getValue(), this.scoreHideRemainingSeconds.getValue(),
+                this.playerCount.getValue(),
                 this.breadCount.getValue(), this.pickaxeFortuneLevel.getValue()
         };
+        GameMode selectedMode = this.mode.getValue();
+        boolean scoreAlways = this.scoreAlwaysShow.getValue();
         boolean starter = this.starterEnabled.getValue();
         boolean generate = this.generateOnWorldLoad.getValue();
         super.resize(minecraft, width, height);
         this.targetSales.setValue(numbers[0]);
-        this.countdownSeconds.setValue(numbers[1]);
-        this.intervalSeconds.setValue(numbers[2]);
-        this.durationMinSeconds.setValue(numbers[3]);
-        this.durationMaxSeconds.setValue(numbers[4]);
-        this.changeMinPercent.setValue(numbers[5]);
-        this.changeMaxPercent.setValue(numbers[6]);
-        this.playerCount.setValue(numbers[7]);
-        this.breadCount.setValue(numbers[8]);
-        this.pickaxeFortuneLevel.setValue(numbers[9]);
+        this.timeLimitSeconds.setValue(numbers[1]);
+        this.countdownSeconds.setValue(numbers[2]);
+        this.intervalSeconds.setValue(numbers[3]);
+        this.durationMinSeconds.setValue(numbers[4]);
+        this.durationMaxSeconds.setValue(numbers[5]);
+        this.changeMinPercent.setValue(numbers[6]);
+        this.changeMaxPercent.setValue(numbers[7]);
+        this.scoreHideRemainingSeconds.setValue(numbers[8]);
+        this.playerCount.setValue(numbers[9]);
+        this.breadCount.setValue(numbers[10]);
+        this.pickaxeFortuneLevel.setValue(numbers[11]);
+        this.mode.setValue(selectedMode);
+        this.scoreAlwaysShow.setValue(scoreAlways);
         this.starterEnabled.setValue(starter);
         this.generateOnWorldLoad.setValue(generate);
     }
@@ -405,26 +446,39 @@ public class ConfigScreen extends Screen {
         }
     }
 
-    static class ToggleEntry extends Entry {
+    static class CycleEntry<T> extends Entry {
         private final Font font;
         private final Component label;
-        private final CycleButton<Boolean> button;
+        private final CycleButton<T> button;
 
-        ToggleEntry(Font font, Component label, Component tooltip, boolean initialValue) {
+        static CycleEntry<Boolean> ofBoolean(Font font, Component label, Component tooltip, boolean initialValue) {
+            return new CycleEntry<>(font, label,
+                    CycleButton.onOffBuilder(initialValue).displayOnlyValue(), tooltip);
+        }
+
+        static CycleEntry<GameMode> ofGameMode(Font font, Component label, Component tooltip, GameMode initialValue) {
+            return new CycleEntry<>(font, label,
+                    CycleButton.<GameMode>builder(mode ->
+                                    Component.translatable("config.minersmarket.mode." + mode.id()))
+                            .withValues(GameMode.values())
+                            .withInitialValue(initialValue)
+                            .displayOnlyValue(),
+                    tooltip);
+        }
+
+        private CycleEntry(Font font, Component label, CycleButton.Builder<T> builder, Component tooltip) {
             this.font = font;
             this.label = label;
-            this.button = CycleButton.onOffBuilder(initialValue)
-                    .displayOnlyValue()
-                    .create(0, 0, WIDGET_WIDTH, WIDGET_HEIGHT, label, (btn, value) -> {
-                    });
+            this.button = builder.create(0, 0, WIDGET_WIDTH, WIDGET_HEIGHT, label, (btn, value) -> {
+            });
             this.button.setTooltip(Tooltip.create(tooltip));
         }
 
-        boolean getValue() {
+        T getValue() {
             return this.button.getValue();
         }
 
-        void setValue(boolean value) {
+        void setValue(T value) {
             this.button.setValue(value);
         }
 
