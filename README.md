@@ -2,13 +2,13 @@
 
 **A competitive mining mod for Minecraft**
 
-Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold by default! Supports Fabric + NeoForge/Forge.
+Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold! By default, the first player to reach the goal wins. Supports Fabric + NeoForge/Forge.
 
 ![Miner's Market Overview](docs/screenshots/featured-for-readme.png)
 
 ## Features
 
-- **Competitive Mining**: Race against other players to be the first to earn 10,000 gold
+- **Competitive Mining**: Race against other players to come out on top
 - **Two Game Modes**: Race to a target amount, or play to a time limit where the highest earner when the clock runs out wins (both [configurable](#server-configuration))
 - **NPC Merchant**: Sell your mined ores and ingots to a merchant NPC at the market
 - **Auto-Generated Market**: A market structure spawns automatically at the world spawn point
