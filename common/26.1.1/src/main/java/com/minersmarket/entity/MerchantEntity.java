@@ -1,5 +1,6 @@
 package com.minersmarket.entity;
 
+import com.minersmarket.config.GameMode;
 import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.state.GameState;
 import com.minersmarket.state.GameStateManager;
@@ -99,7 +100,10 @@ public class MerchantEntity extends Mob {
         }
 
         if (!manager.canSell()) {
-            ((ServerPlayer) player).sendSystemMessage(Component.translatable("message.minersmarket.game_not_started"));
+            ((ServerPlayer) player).sendSystemMessage(Component.translatable(
+                    manager.getState() == GameState.NOT_STARTED
+                            ? "message.minersmarket.game_not_started"
+                            : "message.minersmarket.game_ended_time_limit"));
             setUnhappyCounter(20);
             this.playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f);
             return InteractionResult.CONSUME;
@@ -118,12 +122,13 @@ public class MerchantEntity extends Mob {
         long totalEarned = (long) pricePerItem * sellCount;
 
         heldItem.shrink(sellCount);
-        manager.addSalesAmount(player.getUUID(), totalEarned);
+        manager.addSalesAmount(player.getUUID(), player.getDisplayName().getString(), totalEarned);
         ServerPlayer serverPlayer = (ServerPlayer) player;
         playNotifySound(serverPlayer, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0f, 1.0f);
 
-        // Check if this player just reached the target
-        if (manager.hasReachedTarget(player.getUUID())
+        // Reaching a particular amount is not an event in time-limit mode.
+        if (manager.getMode() == GameMode.TARGET
+                && manager.hasReachedTarget(player.getUUID())
                 && !manager.hasFinished(player.getUUID())) {
             manager.recordFinish(player.getUUID(), player.getDisplayName().getString());
             if (manager.getState() == GameState.IN_PROGRESS) {

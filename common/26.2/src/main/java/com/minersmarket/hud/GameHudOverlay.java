@@ -1,8 +1,10 @@
 package com.minersmarket.hud;
 
 import com.minersmarket.MinersMarket;
+import com.minersmarket.config.GameMode;
 import com.minersmarket.state.ClientGameState;
 import com.minersmarket.state.GameState;
+import com.minersmarket.state.RankedPlayer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.DeltaTracker;
@@ -68,28 +70,42 @@ public class GameHudOverlay {
             return;
         }
 
-        // Sales amount display
+        boolean timeLimit = ClientGameState.getMode() == GameMode.TIME_LIMIT;
+
+        // Sales amount display. Time-limit mode has no target to compare against.
         long sales = ClientGameState.getSalesAmount();
-        String salesText = String.format("%,d / %,d", sales, ClientGameState.getTargetSales());
+        String salesText = timeLimit
+                ? String.format("%,d", sales)
+                : String.format("%,d / %,d", sales, ClientGameState.getTargetSales());
         int textWidth = mc.font.width(salesText);
         int x = screenWidth - textWidth - MARGIN - COIN_SIZE - 2;
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, COIN_TEXTURE, x, y, 0, 0, COIN_SIZE, COIN_SIZE, COIN_SIZE, COIN_SIZE);
         graphics.text(mc.font, salesText, x + COIN_SIZE + 2, y, 0xFFFFD700, true);
 
-        // Play time display
-        int ticks = ClientGameState.getPlayTime();
+        // Time display: remaining time while a limit is running, elapsed time otherwise.
+        int ticks = timeLimit ? ClientGameState.getRemainingTicks() : ClientGameState.getPlayTime();
         int totalSeconds = ticks / 20;
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         String timeText = String.format("%02d:%02d", minutes, seconds);
         int timeWidth = mc.font.width(timeText);
-        graphics.text(mc.font, timeText, screenWidth - timeWidth - MARGIN, y + 12, 0xFFFFFFFF, true);
+        int timeColor = timeLimit && ticks <= 60 * 20 ? 0xFFFF5555 : 0xFFFFFFFF;
+        graphics.text(mc.font, timeText, screenWidth - timeWidth - MARGIN, y + 12, timeColor, true);
 
-        // Ranking display (finished players)
-        var finishedPlayers = ClientGameState.getFinishedPlayers();
         int nextY = y + 26;
-        if (!finishedPlayers.isEmpty()) {
+        if (timeLimit) {
+            // Empty while the ranking is hidden — the server withholds it.
+            for (RankedPlayer entry : ClientGameState.getRanking()) {
+                String rankText = String.format("#%d %s  %,d",
+                        entry.rank(), entry.playerName(), entry.salesAmount());
+                int rankWidth = mc.font.width(rankText);
+                int color = (entry.rank() == 1) ? 0xFFFFD700 : 0xFFCCCCCC;
+                graphics.text(mc.font, rankText, screenWidth - rankWidth - MARGIN, nextY, color, true);
+                nextY += 11;
+            }
+        } else {
+            var finishedPlayers = ClientGameState.getFinishedPlayers();
             for (int i = 0; i < finishedPlayers.size(); i++) {
                 var entry = finishedPlayers.get(i);
                 int ft = entry.finishTimeTicks() / 20;

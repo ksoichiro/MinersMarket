@@ -1,6 +1,7 @@
 package com.minersmarket.state;
 
 import com.minersmarket.config.ConfigDefaults;
+import com.minersmarket.config.GameMode;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,9 @@ public class ClientGameState {
     private static boolean priceEventActive = false;
     private static int priceEventRemainingTicks = 0;
     private static float priceMultiplier = 1.0f;
+    private static GameMode mode = ConfigDefaults.GAME_MODE;
+    private static int remainingTicks = 0;
+    private static List<RankedPlayer> ranking = Collections.emptyList();
     private static LongConsumer onSaleCallback;
 
     public static void setOnSaleCallback(LongConsumer callback) {
@@ -27,7 +31,8 @@ public class ClientGameState {
     public static void update(GameState state, long salesAmount, long targetSales, int playTime,
                               List<FinishedEntry> finishedPlayers,
                               boolean priceEventActive, int priceEventRemainingTicks,
-                              float priceMultiplier) {
+                              float priceMultiplier,
+                              GameMode mode, int remainingTicks, List<RankedPlayer> ranking) {
         long earned = salesAmount - ClientGameState.salesAmount;
         if (earned > 0 && onSaleCallback != null) {
             onSaleCallback.accept(earned);
@@ -40,6 +45,9 @@ public class ClientGameState {
         ClientGameState.priceEventActive = priceEventActive;
         ClientGameState.priceEventRemainingTicks = priceEventRemainingTicks;
         ClientGameState.priceMultiplier = priceMultiplier;
+        ClientGameState.mode = mode;
+        ClientGameState.remainingTicks = remainingTicks;
+        ClientGameState.ranking = ranking;
     }
 
     public static GameState getState() {
@@ -74,6 +82,19 @@ public class ClientGameState {
         return priceMultiplier;
     }
 
+    public static GameMode getMode() {
+        return mode;
+    }
+
+    public static int getRemainingTicks() {
+        return remainingTicks;
+    }
+
+    /** Empty while the ranking is hidden — the server does not send it. */
+    public static List<RankedPlayer> getRanking() {
+        return ranking;
+    }
+
     public static void reset() {
         state = GameState.NOT_STARTED;
         salesAmount = 0;
@@ -83,6 +104,8 @@ public class ClientGameState {
         priceEventActive = false;
         priceEventRemainingTicks = 0;
         priceMultiplier = 1.0f;
+        mode = ConfigDefaults.GAME_MODE;
+        remainingTicks = 0;
+        ranking = Collections.emptyList();
     }
 }
-

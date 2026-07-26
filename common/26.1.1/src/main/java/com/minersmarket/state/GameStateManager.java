@@ -1,7 +1,10 @@
 package com.minersmarket.state;
 
 import com.minersmarket.MinersMarket;
+import com.minersmarket.config.ConfigDefaults;
+import com.minersmarket.config.GameMode;
 import com.minersmarket.config.MinersMarketConfig;
+import com.minersmarket.network.GameStateSyncPacket;
 import com.minersmarket.trade.PriceList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -19,6 +22,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -74,8 +80,13 @@ public class GameStateManager {
     public void startCountdown() {
         countdownTicks = MinersMarketConfig.get().game().countdownSeconds() * TICKS_PER_SECOND;
         savedData.salesAmounts.clear();
+        savedData.playerNames.clear();
         savedData.playTime = 0;
         savedData.targetSales = MinersMarketConfig.get().game().targetSales();
+        // Snapshot the rule-affecting settings so editing the config mid-game
+        // cannot change the rules of a game already running.
+        savedData.mode = MinersMarketConfig.get().game().mode();
+        savedData.timeLimitTicks = MinersMarketConfig.get().game().timeLimitSeconds() * TICKS_PER_SECOND;
         savedData.setDirty();
     }
 
@@ -96,11 +107,49 @@ public class GameStateManager {
         savedData.setDirty();
     }
 
+    private void endByTimeLimit() {
+        savedData.state = GameState.ENDED;
+        savedData.setDirty();
+
+        List<RankedPlayer> ranking = getRanking();
+        List<String> winners = new ArrayList<>();
+        for (RankedPlayer entry : ranking) {
+            if (entry.rank() == 1 && entry.salesAmount() > 0) {
+                winners.add(entry.playerName());
+            }
+        }
+        // With everyone on zero the shared-rank rule would make every player a joint
+        // winner, which is not a result worth announcing.
+        Component subtitle = winners.isEmpty()
+                ? Component.translatable("message.minersmarket.time_up_no_winner")
+                : Component.translatable("message.minersmarket.time_up_subtitle", String.join(", ", winners));
+        broadcastTitleWithSubtitle(
+                Component.translatable("message.minersmarket.time_up_title")
+                        .withStyle(style -> style.withColor(ChatFormatting.GOLD).withBold(true)),
+                subtitle, 10, 80, 20);
+        broadcastSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE);
+
+        broadcastMessage(Component.translatable("message.minersmarket.final_ranking_header"));
+        for (RankedPlayer entry : ranking) {
+            broadcastMessage(Component.translatable("message.minersmarket.final_ranking_entry",
+                    entry.rank(), entry.playerName(), String.format("%,d", entry.salesAmount())));
+        }
+
+        if (serverLevel != null && serverLevel.getServer() != null) {
+            for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+                GameStateSyncPacket.sendToPlayer(player, this);
+            }
+        }
+    }
+
     public void reset() {
         savedData.state = GameState.NOT_STARTED;
         savedData.playTime = 0;
         savedData.salesAmounts.clear();
         savedData.finishedPlayers.clear();
+        savedData.playerNames.clear();
+        savedData.mode = ConfigDefaults.GAME_MODE;
+        savedData.timeLimitTicks = 0;
         countdownTicks = -1;
         priceEventCooldownTicks = priceEventIntervalTicks();
         priceEventDurationTicks = 0;
@@ -118,9 +167,10 @@ public class GameStateManager {
         return savedData.salesAmounts;
     }
 
-    public void addSalesAmount(UUID playerId, long amount) {
+    public void addSalesAmount(UUID playerId, String playerName, long amount) {
         long current = getSalesAmount(playerId);
         savedData.salesAmounts.put(playerId, current + amount);
+        savedData.playerNames.put(playerId, playerName);
         savedData.setDirty();
     }
 
@@ -135,9 +185,16 @@ public class GameStateManager {
             tickCountdown();
         }
         if (savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED) {
-            savedData.playTime++;
-            tickPriceEvent();
+            // Once the limit is reached the clock and the price events stop, so the
+            // result stays fixed and the HUD keeps showing 00:00.
+            if (!isTimeLimitExpired()) {
+                savedData.playTime++;
+                tickPriceEvent();
+            }
             savedData.setDirty();
+            if (savedData.state == GameState.IN_PROGRESS && isTimeLimitExpired()) {
+                endByTimeLimit();
+            }
         }
     }
 
@@ -270,6 +327,10 @@ public class GameStateManager {
     // State checks
 
     public boolean canSell() {
+        if (savedData.mode == GameMode.TIME_LIMIT) {
+            // The result is final the moment the timer expires.
+            return savedData.state == GameState.IN_PROGRESS;
+        }
         return savedData.state == GameState.IN_PROGRESS || savedData.state == GameState.ENDED;
     }
 
@@ -305,6 +366,68 @@ public class GameStateManager {
 
     public long getTargetSales() {
         return savedData.targetSales;
+    }
+
+    public GameMode getMode() {
+        return savedData.mode;
+    }
+
+    public int getRemainingTicks() {
+        return Math.max(0, savedData.timeLimitTicks - savedData.playTime);
+    }
+
+    private boolean isTimeLimitExpired() {
+        return savedData.mode == GameMode.TIME_LIMIT && savedData.playTime >= savedData.timeLimitTicks;
+    }
+
+    /**
+     * Whether the full ranking may be shown. The score-display settings are read live
+     * rather than snapshotted, so a host can toggle the scoreboard mid-game.
+     */
+    public boolean isRankingVisible() {
+        if (savedData.mode != GameMode.TIME_LIMIT) {
+            return false;
+        }
+        if (savedData.state == GameState.ENDED) {
+            return true;
+        }
+        MinersMarketConfig.ScoreDisplay display = MinersMarketConfig.get().scoreDisplay();
+        if (!display.alwaysShow()) {
+            return false;
+        }
+        return display.hideRemainingSeconds() == 0
+                || getRemainingTicks() > display.hideRemainingSeconds() * TICKS_PER_SECOND;
+    }
+
+    public List<RankedPlayer> getRanking() {
+        Map<UUID, Long> amounts = new HashMap<>(savedData.salesAmounts);
+        Map<UUID, String> names = new HashMap<>(savedData.playerNames);
+        if (serverLevel != null && serverLevel.getServer() != null) {
+            // Online players who have not sold anything still belong in the ranking,
+            // and their names are fresher than the stored ones.
+            for (ServerPlayer player : serverLevel.getServer().getPlayerList().getPlayers()) {
+                amounts.putIfAbsent(player.getUUID(), 0L);
+                names.put(player.getUUID(), player.getDisplayName().getString());
+            }
+        }
+
+        List<Map.Entry<UUID, Long>> sorted = new ArrayList<>(amounts.entrySet());
+        sorted.sort(Comparator.<Map.Entry<UUID, Long>>comparingLong(Map.Entry::getValue).reversed());
+
+        List<RankedPlayer> ranking = new ArrayList<>();
+        long previousAmount = Long.MIN_VALUE;
+        int previousRank = 0;
+        for (int i = 0; i < sorted.size(); i++) {
+            Map.Entry<UUID, Long> entry = sorted.get(i);
+            long amount = entry.getValue();
+            // Equal amounts share a rank; the next distinct amount skips the tied places.
+            int rank = amount == previousAmount ? previousRank : i + 1;
+            previousAmount = amount;
+            previousRank = rank;
+            String name = names.getOrDefault(entry.getKey(), entry.getKey().toString());
+            ranking.add(new RankedPlayer(rank, name, amount));
+        }
+        return ranking;
     }
 
     // Market generation
