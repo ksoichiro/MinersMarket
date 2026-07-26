@@ -24,12 +24,16 @@ public final class ConfigWriter {
             fileConfig.load();
             fileConfig.set("schema_version", config.schemaVersion());
             fileConfig.set("game.target_sales", config.game().targetSales());
+            fileConfig.set("game.mode", config.game().mode().id());
+            fileConfig.set("game.time_limit_seconds", config.game().timeLimitSeconds());
             fileConfig.set("game.countdown_seconds", config.game().countdownSeconds());
             fileConfig.set("price_event.interval_seconds", config.priceEvent().intervalSeconds());
             fileConfig.set("price_event.duration_min_seconds", config.priceEvent().durationMinSeconds());
             fileConfig.set("price_event.duration_max_seconds", config.priceEvent().durationMaxSeconds());
             fileConfig.set("price_event.change_min_percent", config.priceEvent().changeMinPercent());
             fileConfig.set("price_event.change_max_percent", config.priceEvent().changeMaxPercent());
+            fileConfig.set("score_display.always_show", config.scoreDisplay().alwaysShow());
+            fileConfig.set("score_display.hide_remaining_seconds", config.scoreDisplay().hideRemainingSeconds());
             fileConfig.set("starter_items.enabled", config.starterItems().enabled());
             fileConfig.set("starter_items.player_count", config.starterItems().playerCount());
             fileConfig.set("starter_items.bread_count", config.starterItems().breadCount());

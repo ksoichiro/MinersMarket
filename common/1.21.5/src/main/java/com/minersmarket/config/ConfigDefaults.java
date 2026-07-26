@@ -4,6 +4,12 @@ public final class ConfigDefaults {
     public static final long GAME_TARGET_SALES = 10000L;
     public static final int GAME_COUNTDOWN_SECONDS = 5;
 
+    public static final GameMode GAME_MODE = GameMode.TARGET;
+    public static final int GAME_TIME_LIMIT_SECONDS = 1800;
+
+    public static final boolean SCORE_DISPLAY_ALWAYS_SHOW = false;
+    public static final int SCORE_DISPLAY_HIDE_REMAINING_SECONDS = 300;
+
     public static final int PRICE_EVENT_INTERVAL_SECONDS = 600;
     public static final int PRICE_EVENT_DURATION_MIN_SECONDS = 180;
     public static final int PRICE_EVENT_DURATION_MAX_SECONDS = 300;
@@ -23,13 +29,18 @@ public final class ConfigDefaults {
     public static MinersMarketConfig defaults() {
         return new MinersMarketConfig(
                 MinersMarketConfig.CURRENT_SCHEMA_VERSION,
-                new MinersMarketConfig.Game(GAME_TARGET_SALES, GAME_COUNTDOWN_SECONDS),
+                new MinersMarketConfig.Game(GAME_MODE, GAME_TARGET_SALES, GAME_TIME_LIMIT_SECONDS,
+                        GAME_COUNTDOWN_SECONDS),
                 new MinersMarketConfig.PriceEvent(
                         PRICE_EVENT_INTERVAL_SECONDS,
                         PRICE_EVENT_DURATION_MIN_SECONDS,
                         PRICE_EVENT_DURATION_MAX_SECONDS,
                         PRICE_EVENT_CHANGE_MIN_PERCENT,
                         PRICE_EVENT_CHANGE_MAX_PERCENT
+                ),
+                new MinersMarketConfig.ScoreDisplay(
+                        SCORE_DISPLAY_ALWAYS_SHOW,
+                        SCORE_DISPLAY_HIDE_REMAINING_SECONDS
                 ),
                 new MinersMarketConfig.StarterItems(
                         STARTER_ITEMS_ENABLED,

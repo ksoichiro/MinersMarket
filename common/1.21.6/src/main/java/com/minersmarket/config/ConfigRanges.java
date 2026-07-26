@@ -9,6 +9,12 @@ public final class ConfigRanges {
     public static final long MAX_TARGET_SALES = Long.MAX_VALUE;
     public static final int MIN_COUNTDOWN_SECONDS = 0;
     public static final int MAX_COUNTDOWN_SECONDS = 300;
+    // Durations are converted to ticks and held in an int, so the upper bound is
+    // divided by the tick rate to keep seconds * 20 from overflowing.
+    public static final int MIN_TIME_LIMIT_SECONDS = 1;
+    public static final int MAX_TIME_LIMIT_SECONDS = Integer.MAX_VALUE / 20;
+    public static final int MIN_HIDE_REMAINING_SECONDS = 0;
+    public static final int MAX_HIDE_REMAINING_SECONDS = Integer.MAX_VALUE / 20;
     public static final int MIN_INTERVAL_SECONDS = 1;
     public static final int MAX_INTERVAL_SECONDS = Integer.MAX_VALUE;
     public static final int MIN_DURATION_SECONDS = 1;

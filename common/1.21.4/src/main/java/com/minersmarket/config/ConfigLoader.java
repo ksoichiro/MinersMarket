@@ -21,6 +21,11 @@ public final class ConfigLoader {
     private static final String K_GAME = "game";
     private static final String K_TARGET_SALES = "target_sales";
     private static final String K_COUNTDOWN_SECONDS = "countdown_seconds";
+    private static final String K_MODE = "mode";
+    private static final String K_TIME_LIMIT_SECONDS = "time_limit_seconds";
+    private static final String K_SCORE_DISPLAY = "score_display";
+    private static final String K_ALWAYS_SHOW = "always_show";
+    private static final String K_HIDE_REMAINING_SECONDS = "hide_remaining_seconds";
     private static final String K_PRICE_EVENT = "price_event";
     private static final String K_INTERVAL_SECONDS = "interval_seconds";
     private static final String K_DURATION_MIN_SECONDS = "duration_min_seconds";
@@ -109,6 +114,28 @@ public final class ConfigLoader {
                 ConfigRanges.MAX_COUNTDOWN_SECONDS
         );
 
+        GameMode mode = readGameMode(parsed, K_GAME + "." + K_MODE, ConfigDefaults.GAME_MODE);
+        int timeLimitSeconds = readInt(
+                parsed,
+                K_GAME + "." + K_TIME_LIMIT_SECONDS,
+                ConfigDefaults.GAME_TIME_LIMIT_SECONDS,
+                ConfigRanges.MIN_TIME_LIMIT_SECONDS,
+                ConfigRanges.MAX_TIME_LIMIT_SECONDS
+        );
+
+        boolean scoreAlwaysShow = readBoolean(
+                parsed,
+                K_SCORE_DISPLAY + "." + K_ALWAYS_SHOW,
+                ConfigDefaults.SCORE_DISPLAY_ALWAYS_SHOW
+        );
+        int scoreHideRemainingSeconds = readInt(
+                parsed,
+                K_SCORE_DISPLAY + "." + K_HIDE_REMAINING_SECONDS,
+                ConfigDefaults.SCORE_DISPLAY_HIDE_REMAINING_SECONDS,
+                ConfigRanges.MIN_HIDE_REMAINING_SECONDS,
+                ConfigRanges.MAX_HIDE_REMAINING_SECONDS
+        );
+
         int intervalSeconds = readInt(
                 parsed,
                 K_PRICE_EVENT + "." + K_INTERVAL_SECONDS,
@@ -191,6 +218,7 @@ public final class ConfigLoader {
         for (CommentedConfig.Entry entry : parsed.entrySet()) {
             String key = entry.getKey();
             if (!key.equals(K_SCHEMA_VERSION) && !key.equals(K_GAME) && !key.equals(K_PRICE_EVENT)
+                    && !key.equals(K_SCORE_DISPLAY)
                     && !key.equals(K_STARTER_ITEMS) && !key.equals(K_MARKET)) {
                 LOGGER.warn("Unknown top-level key in {}: {}", CONFIG_FILE_NAME, key);
             }
@@ -198,7 +226,7 @@ public final class ConfigLoader {
 
         return new MinersMarketConfig(
                 schemaVersion,
-                new MinersMarketConfig.Game(targetSales, countdownSeconds),
+                new MinersMarketConfig.Game(mode, targetSales, timeLimitSeconds, countdownSeconds),
                 new MinersMarketConfig.PriceEvent(
                         intervalSeconds,
                         durationMinSeconds,
@@ -206,6 +234,7 @@ public final class ConfigLoader {
                         changeMinPercent,
                         changeMaxPercent
                 ),
+                new MinersMarketConfig.ScoreDisplay(scoreAlwaysShow, scoreHideRemainingSeconds),
                 new MinersMarketConfig.StarterItems(
                         starterEnabled,
                         playerCount,
@@ -239,6 +268,23 @@ public final class ConfigLoader {
         }
         LOGGER.error("Invalid {}.{} = {} (must be true or false); using default {}",
                 CONFIG_FILE_NAME, path, value, defaultValue);
+        return defaultValue;
+    }
+
+    private static GameMode readGameMode(CommentedConfig parsed, String path, GameMode defaultValue) {
+        Object value = parsed.get(path);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof String string) {
+            GameMode mode = GameMode.fromId(string.trim());
+            if (mode != null) {
+                return mode;
+            }
+        }
+        LOGGER.error("Invalid {}.{} = {} (must be \"{}\" or \"{}\"); using default {}",
+                CONFIG_FILE_NAME, path, value,
+                GameMode.TARGET.id(), GameMode.TIME_LIMIT.id(), defaultValue.id());
         return defaultValue;
     }
 

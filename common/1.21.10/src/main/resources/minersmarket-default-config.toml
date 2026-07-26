@@ -2,11 +2,16 @@
 # Changes can be applied while the server is running with:
 # /minersmarket config reload
 
-schema_version = 1
+schema_version = 2
 
 [game]
-# Sales amount required for a player to finish the game.
+# Win condition. "target" = first player to reach target_sales wins.
+# "time_limit" = the highest sales amount when time_limit_seconds runs out wins.
+mode = "target"
+# Sales amount required for a player to finish the game ("target" mode only).
 target_sales = 10000
+# Length of a game in seconds ("time_limit" mode only).
+time_limit_seconds = 1800
 # Countdown length in seconds before the game starts.
 countdown_seconds = 5
 
@@ -21,6 +26,15 @@ duration_max_seconds = 300
 change_min_percent = 10
 # Maximum price change as a percentage (must be >= change_min_percent).
 change_max_percent = 30
+
+[score_display]
+# "time_limit" mode only.
+# If true, every player's sales amount is shown on the HUD during the game.
+# If false, the totals are revealed only when the time limit expires.
+always_show = false
+# With always_show = true, hide the ranking once this many seconds remain,
+# so the finish is a surprise. 0 keeps it visible to the end.
+hide_remaining_seconds = 300
 
 [starter_items]
 # If true, the market chest is filled with starting equipment.
