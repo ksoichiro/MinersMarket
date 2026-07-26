@@ -2,7 +2,7 @@
 
 **A competitive mining mod for Minecraft**
 
-Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold! Supports Fabric + NeoForge/Forge.
+Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold by default! Supports Fabric + NeoForge/Forge.
 
 ![Miner's Market Overview](docs/screenshots/featured-for-readme.png)
 

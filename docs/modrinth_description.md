@@ -6,7 +6,7 @@
 
 **A competitive mining mod for Minecraft**
 
-Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold! The first player to reach the goal wins!
+Compete to strike it rich — mine ores, sell to the merchant, and be the first to earn 10,000 gold! By default, the first player to reach the goal wins!
 
 ---
 
@@ -74,7 +74,7 @@ Sell your mined items to the merchant for gold:
 4. **Start the Game**: Press the Game Start block to begin the countdown
 5. **Mine Ores**: Head underground and mine as many ores as you can
 6. **Sell to Merchant**: Return to the market and right-click the merchant while holding items
-7. **Reach 10,000 Gold**: The first player to earn 10,000 gold wins!
+7. **Reach 10,000 Gold**: By default, the first player to earn 10,000 gold wins!
 
 ---
 
