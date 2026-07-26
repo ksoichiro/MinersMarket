@@ -109,4 +109,3 @@ public class ClientGameState {
         ranking = Collections.emptyList();
     }
 }
-
