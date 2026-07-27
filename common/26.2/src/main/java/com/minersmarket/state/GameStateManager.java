@@ -86,7 +86,11 @@ public class GameStateManager {
         // Snapshot the rule-affecting settings so editing the config mid-game
         // cannot change the rules of a game already running.
         savedData.mode = MinersMarketConfig.get().game().mode();
-        savedData.timeLimitTicks = MinersMarketConfig.get().game().timeLimitSeconds() * TICKS_PER_SECOND;
+        // Target mode has no time limit; leaving a stale value here would put a
+        // meaningless countdown in every sync packet.
+        savedData.timeLimitTicks = savedData.mode == GameMode.TIME_LIMIT
+                ? MinersMarketConfig.get().game().timeLimitSeconds() * TICKS_PER_SECOND
+                : 0;
         savedData.setDirty();
     }
 
@@ -109,6 +113,10 @@ public class GameStateManager {
 
     private void endByTimeLimit() {
         savedData.state = GameState.ENDED;
+        // The clock stops here, so a price event still running would otherwise stay
+        // frozen on the HUD until the game is reset.
+        priceEventDurationTicks = 0;
+        priceMultiplier = 1.0f;
         savedData.setDirty();
 
         List<RankedPlayer> ranking = getRanking();
