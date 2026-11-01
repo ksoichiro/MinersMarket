@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Minecraft 26.3 support (Fabric + NeoForge)
 - In-game config screen built with vanilla widgets (no extra dependencies)
   - Opens from the mod list: Config button on NeoForge/Forge, ModMenu entry on Fabric (when ModMenu is installed)
   - Key binding "Open Config Screen" (unbound by default, category "Miner's Market")

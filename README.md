@@ -23,6 +23,8 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 
 | Minecraft | Mod Loader |
 |-----------|-----------|
+| 26.3 | Fabric Loader 0.19.3+ with Fabric API 0.165.0+26.3 |
+| 26.3 | NeoForge 26.3.0.100+ |
 | 26.2 | Fabric Loader 0.18.5+ with Fabric API 0.152.2+26.2 |
 | 26.2 | NeoForge 26.2.0.6-beta+ |
 | 26.1.2 | Fabric Loader 0.18.5+ with Fabric API 0.145.4+26.1.2 |
@@ -56,9 +58,9 @@ Compete to strike it rich — mine ores, sell to the merchant, and be the first 
 ## Requirements
 
 ### For Players
-- **Minecraft**: Java Edition 1.20.1–26.2
+- **Minecraft**: Java Edition 1.20.1–26.3
 - **Mod Loader** (choose one):
-  - **26.1.1–26.2**: Fabric with Fabric API, or NeoForge (requires Java 25)
+  - **26.1.1–26.3**: Fabric with Fabric API, or NeoForge (requires Java 25)
   - **26.1**: NeoForge only (requires Java 25)
   - **1.21.1–1.21.11**: Fabric with Fabric API, or NeoForge
   - **1.20.1**: Fabric with Fabric API, or Forge
@@ -246,4 +248,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**Developed for Minecraft Java Edition 1.20.1–26.2**
+**Developed for Minecraft Java Edition 1.20.1–26.3**

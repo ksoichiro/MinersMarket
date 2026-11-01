@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minersmarket:block/game_reset_block"
+    }
+  }
+}

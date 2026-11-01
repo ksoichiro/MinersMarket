@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miner's Market is a Minecraft mod where players compete to earn 10,000 gold by mining and selling ores to an NPC merchant. Cross-platform (Fabric + NeoForge/Forge) using a per-platform plugin model (Fabric Loom for Fabric, ModDevGradle for NeoForge/Forge — selected by MC version in `settings.gradle`; no Architectury runtime API dependency), targeting Minecraft 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, 1.21.1 (Java 21), 1.20.1 (Java 17), and 26.1, 26.1.1, 26.1.2, 26.2 (Java 25).
+Miner's Market is a Minecraft mod where players compete to earn 10,000 gold by mining and selling ores to an NPC merchant. Cross-platform (Fabric + NeoForge/Forge) using a per-platform plugin model (Fabric Loom for Fabric, ModDevGradle for NeoForge/Forge — selected by MC version in `settings.gradle`; no Architectury runtime API dependency), targeting Minecraft 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, 1.21.1 (Java 21), 1.20.1 (Java 17), and 26.1, 26.1.1, 26.1.2, 26.2, 26.3 (Java 25).
 
 ## Build Commands
 
@@ -44,7 +44,7 @@ The `releaseModrinth` / `releaseCurseForge` tasks come from the `gradle/shared` 
 
 The project shares code between Fabric and NeoForge/Forge without an Architectury API runtime dependency. Each platform module applies its own plugin (Fabric Loom for Fabric, ModDevGradle `net.neoforged.moddev` for NeoForge, `net.neoforged.moddev.legacyforge` for Forge). The common module exposes its source/resource dirs through consumable `commonJava` / `commonResources` configurations (declared in an `artifacts {}` block); platform modules consume them via `source configurations.commonJava` and `from configurations.commonResources` (replacing the former Architectury shadow/transform approach). For 26.x, the **common** module uses `net.neoforged.moddev` with `neoFormVersion` (NeoForm), not Loom.
 
-Module directories (NB: 26.1 has NeoForge only; 26.1.1/26.1.2/26.2 have Fabric + NeoForge):
+Module directories (NB: 26.1 has NeoForge only; 26.1.1/26.1.2/26.2/26.3 have Fabric + NeoForge):
 
 - **`common/shared/`** — Platform-independent shared code (no build.gradle, included as srcDir by common module). Base package: `com.minersmarket`
 - **`common/1.21.1/`** — Version-specific common module for MC 1.21.1. Includes `common/shared` sources via `srcDir`.
@@ -58,7 +58,7 @@ Module directories (NB: 26.1 has NeoForge only; 26.1.1/26.1.2/26.2 have Fabric +
 - **`common/1.21.4/`** — Version-specific common module for MC 1.21.4. Contains all sources (does NOT include `common/shared` via srcDir due to 1.21.2+ breaking API changes). Adds `assets/<namespace>/items/` for 1.21.4 item model system.
 - **`common/1.21.3/`** — Version-specific common module for MC 1.21.3. Contains all sources (does NOT include `common/shared` via srcDir due to 1.21.2+ breaking API changes).
 - **`common/1.20.1/`** — Version-specific common module for MC 1.20.1. Includes `common/shared` sources via `srcDir`.
-- **`common/26.1/`**, **`common/26.1.1/`**, **`common/26.1.2/`**, **`common/26.2/`** — Version-specific common modules for MC 26.x. Each contains all sources (does NOT include `common/shared`). Apply `net.neoforged.moddev` with `neoFormVersion` (NeoForm), not Loom.
+- **`common/26.1/`**, **`common/26.1.1/`**, **`common/26.1.2/`**, **`common/26.2/`**, **`common/26.3/`** — Version-specific common modules for MC 26.x. Each contains all sources (does NOT include `common/shared`). Apply `net.neoforged.moddev` with `neoFormVersion` (NeoForm), not Loom.
 - **`fabric/base/`** — Fabric platform base code (no build.gradle, included as srcDir by fabric module)
 - **`fabric/1.21.11/`** — Fabric platform build module for MC 1.21.11. Maps to Gradle project `:fabric`.
 - **`fabric/1.21.10/`** — Fabric platform build module for MC 1.21.10. Maps to Gradle project `:fabric`.
@@ -73,7 +73,8 @@ Module directories (NB: 26.1 has NeoForge only; 26.1.1/26.1.2/26.2 have Fabric +
 - **`fabric/1.20.1/`** — Fabric platform build module for MC 1.20.1. Maps to Gradle project `:fabric`.
 - **`fabric/26.1.1/`** — Fabric platform build module for MC 26.1.1. Maps to Gradle project `:fabric`.
 - **`fabric/26.1.2/`** — Fabric platform build module for MC 26.1.2. Maps to Gradle project `:fabric`.
-- **`fabric/26.2/`** — Fabric platform build module for MC 26.2. Maps to Gradle project `:fabric`. (No `fabric/26.1/` — 26.1 is NeoForge only.)
+- **`fabric/26.2/`** — Fabric platform build module for MC 26.2. Maps to Gradle project `:fabric`.
+- **`fabric/26.3/`** — Fabric platform build module for MC 26.3. Maps to Gradle project `:fabric`. (No `fabric/26.1/` — 26.1 is NeoForge only.)
 - **`neoforge/base/`** — NeoForge platform base code (no build.gradle, included as srcDir by neoforge module)
 - **`neoforge/1.21.11/`** — NeoForge platform build module for MC 1.21.11. Maps to Gradle project `:neoforge`.
 - **`neoforge/1.21.10/`** — NeoForge platform build module for MC 1.21.10. Maps to Gradle project `:neoforge`.
@@ -89,6 +90,7 @@ Module directories (NB: 26.1 has NeoForge only; 26.1.1/26.1.2/26.2 have Fabric +
 - **`neoforge/26.1.1/`** — NeoForge platform build module for MC 26.1.1. Maps to Gradle project `:neoforge`.
 - **`neoforge/26.1.2/`** — NeoForge platform build module for MC 26.1.2. Maps to Gradle project `:neoforge`.
 - **`neoforge/26.2/`** — NeoForge platform build module for MC 26.2. Maps to Gradle project `:neoforge`.
+- **`neoforge/26.3/`** — NeoForge platform build module for MC 26.3. Maps to Gradle project `:neoforge`.
 - **`forge/base/`** — Forge platform base code (no build.gradle, included as srcDir by forge module)
 - **`forge/1.20.1/`** — Forge platform build module for MC 1.20.1. Maps to Gradle project `:forge`.
 
@@ -99,14 +101,14 @@ Gradle project names differ from directory names. `settings.gradle` dynamically 
 - For 1.20.1: `:fabric` → `fabric/1.20.1/`, `:forge` → `forge/1.20.1/` (`enabled_platforms=fabric,forge`)
 - For 1.21.1 – 1.21.11: `:fabric` → `fabric/<version>/`, `:neoforge` → `neoforge/<version>/`
 - For 26.1: `:neoforge` → `neoforge/26.1/` only (NeoForge-only — no `:fabric`/`:forge`)
-- For 26.1.1 / 26.1.2 / 26.2: `:fabric` → `fabric/<version>/`, `:neoforge` → `neoforge/<version>/`
+- For 26.1.1 / 26.1.2 / 26.2 / 26.3: `:fabric` → `fabric/<version>/`, `:neoforge` → `neoforge/<version>/`
 
 ### Multi-Version Support
 
-- Version properties in `props/<version>.properties` (`1.20.1`, `1.21.1`, `1.21.3`, `1.21.4`, `1.21.5`, `1.21.6`, `1.21.7`, `1.21.8`, `1.21.9`, `1.21.10`, `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2`). Each declares `enabled_platforms` (e.g. `neoforge` for 26.1; `fabric,neoforge` for 26.1.1/26.1.2/26.2).
+- Version properties in `props/<version>.properties` (`1.20.1`, `1.21.1`, `1.21.3`, `1.21.4`, `1.21.5`, `1.21.6`, `1.21.7`, `1.21.8`, `1.21.9`, `1.21.10`, `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2`, `26.3`). Each declares `enabled_platforms` (e.g. `neoforge` for 26.1; `fabric,neoforge` for 26.1.1/26.1.2/26.2/26.3).
 - Override target version: `-Ptarget_mc_version=<version>`
-- Version-specific task aliases: `build1_20_1`, `build1_21_1`, `build1_21_3`, `build1_21_4`, `build1_21_5`, `build1_21_6`, `build1_21_7`, `build1_21_8`, `build1_21_9`, `build1_21_10`, `build1_21_11`, `build26_1`, `build26_1_1`, `build26_1_2`, `build26_2`, etc.
-- 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, and 1.21.1 use NeoForge; 26.x uses NeoForge (26.1 NeoForge only; 26.1.1/26.1.2/26.2 Fabric + NeoForge); 1.20.1 uses Forge (NeoForge didn't exist for 1.20.1)
+- Version-specific task aliases: `build1_20_1`, `build1_21_1`, `build1_21_3`, `build1_21_4`, `build1_21_5`, `build1_21_6`, `build1_21_7`, `build1_21_8`, `build1_21_9`, `build1_21_10`, `build1_21_11`, `build26_1`, `build26_1_1`, `build26_1_2`, `build26_2`, `build26_3`, etc.
+- 1.21.11, 1.21.10, 1.21.9, 1.21.8, 1.21.7, 1.21.6, 1.21.5, 1.21.4, 1.21.3, and 1.21.1 use NeoForge; 26.x uses NeoForge (26.1 NeoForge only; 26.1.1/26.1.2/26.2/26.3 Fabric + NeoForge); 1.20.1 uses Forge (NeoForge didn't exist for 1.20.1)
 
 ### Where to Place Code
 
@@ -126,6 +128,7 @@ Migration caveats (Java sources are otherwise unchanged):
 
 ### Key Dependencies
 
+**26.3**: Fabric Loader 0.20.1 / Fabric API 0.165.0+26.3, NeoForge 26.3.0.100, NeoForm 26.3-1
 **26.2**: Fabric Loader 0.18.5 / Fabric API 0.152.2+26.2, NeoForge 26.2.0.6-beta, NeoForm 26.2-1
 **26.1.2**: Fabric Loader 0.18.5 / Fabric API 0.145.4+26.1.2, NeoForge 26.1.2.4-beta, NeoForm 26.1.2-1
 **26.1.1**: Fabric Loader 0.18.5 / Fabric API 0.145.4+26.1.1, NeoForge 26.1.1.15-beta, NeoForm 26.1.1-1
@@ -142,7 +145,7 @@ Migration caveats (Java sources are otherwise unchanged):
 **1.21.1**: Fabric Loader 0.17.3 / Fabric API 0.116.7+1.21.1, NeoForge 21.1.209
 **1.20.1**: Fabric Loader 0.16.10 / Fabric API 0.92.2+1.20.1, Forge 47.3.0
 - Mojang official mappings
-- Build-plugin versions in root `gradle.properties`: `fabric_loom_version`=1.13.6 (MC 1.x), `fabric_loom_26_version`=1.15.5 (MC 26.x), `moddevgradle_version`=2.0.141 (NeoForge + legacy Forge)
+- Build-plugin versions in root `gradle.properties`: `fabric_loom_version`=1.13.6 (MC 1.x), `fabric_loom_26_version`=1.15.5 (MC 26.x), `moddevgradle_version`=2.0.148 (NeoForge + legacy Forge)
 
 ### Platform Selection
 

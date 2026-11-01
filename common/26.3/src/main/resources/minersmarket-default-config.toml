@@ -1,0 +1,52 @@
+# Miner's Market server configuration.
+# Changes can be applied while the server is running with:
+# /minersmarket config reload
+
+schema_version = 2
+
+[game]
+# Win condition. "target" = first player to reach target_sales wins.
+# "time_limit" = the highest sales amount when time_limit_seconds runs out wins.
+mode = "target"
+# Sales amount required for a player to finish the game ("target" mode only).
+target_sales = 10000
+# Length of a game in seconds ("time_limit" mode only).
+time_limit_seconds = 1800
+# Countdown length in seconds before the game starts.
+countdown_seconds = 5
+
+[price_event]
+# Seconds to wait after one price event ends before the next one can start.
+interval_seconds = 600
+# Minimum duration of a price event in seconds.
+duration_min_seconds = 180
+# Maximum duration of a price event in seconds (must be >= duration_min_seconds).
+duration_max_seconds = 300
+# Minimum price change as a percentage.
+change_min_percent = 10
+# Maximum price change as a percentage (must be >= change_min_percent).
+change_max_percent = 30
+
+[score_display]
+# "time_limit" mode only.
+# If true, every player's sales amount is shown on the HUD during the game.
+# If false, the totals are revealed only when the time limit expires.
+always_show = false
+# With always_show = true, hide the ranking once this many seconds remain,
+# so the finish is a surprise. 0 keeps it visible to the end.
+hide_remaining_seconds = 300
+
+[starter_items]
+# If true, the market chest is filled with starting equipment.
+enabled = true
+# Number of players to equip (each gets one pickaxe and one bread stack).
+player_count = 8
+# Number of bread items per stack.
+bread_count = 64
+# Fortune enchantment level on the starter pickaxes (0 disables the enchantment).
+pickaxe_fortune_level = 3
+
+[market]
+# If true, the market is generated when an Overworld is loaded and no market has
+# been generated for that world yet.
+generate_on_world_load = true
