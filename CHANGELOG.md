@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.5.0]
+
 ### Added
 
 - Minecraft 26.3 support (Fabric + NeoForge)
